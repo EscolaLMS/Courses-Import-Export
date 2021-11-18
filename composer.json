@@ -1,0 +1,41 @@
+{
+  "name": "escolalms/courses-import-export",
+  "description": "Escola Headless LMS Courses Import Export",
+  "type": "package",
+  "require": {
+    "php": ">=7.4",
+    "laravel/framework": ">=8.0",
+    "zanysoft/laravel-zip": "^1.0"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^9.0",
+    "orchestra/testbench": ">=5.0"
+  },
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Mateusz Wojczal",
+      "email": "mateusz.wojczal@escola.pl"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "EscolaLms\\CoursesImportExport\\": "src",
+      "EscolaLms\\CoursesImportExport\\Tests\\": "tests",
+      "EscolaLms\\CoursesImportExport\\Database\\Seeders\\": "database/seeders"
+    }
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "EscolaLms\\CoursesImportExport\\EscolaLmsCoursesImportExportServiceProvider"
+      ]
+    }
+  },
+  "config": {
+    "preferred-install": "dist",
+    "sort-packages": true
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true
+}
