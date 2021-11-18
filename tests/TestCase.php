@@ -1,6 +1,6 @@
 <?php
 
-namespace EscolaLms\Courses\Tests;
+namespace EscolaLms\CoursesImportExport\Tests;
 
 use EscolaLms\Auth\EscolaLmsAuthServiceProvider;
 use EscolaLms\Auth\Tests\Models\Client;

@@ -2,10 +2,9 @@
 
 namespace EscolaLms\CoursesImportExport\Services;
 
-use EscolaLms\Courses\Models\Course;
 use EscolaLms\Courses\Repositories\Contracts\CourseRepositoryContract;
-use EscolaLms\Courses\Services\Contracts\CourseServiceContract;
 use EscolaLms\CoursesImportExport\Http\Resources\CourseExportResource;
+use EscolaLms\CoursesImportExport\Models\Course;
 use EscolaLms\CoursesImportExport\Services\Contracts\ExportImportServiceContract;
 use Illuminate\Support\Facades\Storage;
 use ZanySoft\Zip\Zip;
@@ -13,19 +12,17 @@ use ZanySoft\Zip\Zip;
 class ExportImportService implements ExportImportServiceContract
 {
     private CourseRepositoryContract $courseRepository;
-    private CourseServiceContract $courseService;
 
     public function __construct(
-        CourseRepositoryContract $courseRepository,
-        CourseServiceContract $courseService
+        CourseRepositoryContract $courseRepository
     ) {
         $this->courseRepository = $courseRepository;
-        $this->courseService = $courseService;
     }
 
     private function fixAllPathsBeforeZipping(int $courseId): void
     {
-        $this->courseService->fixAssetPaths($courseId);
+        $course = Course::findOrFail($courseId);
+        $course->fixAssetPaths();
     }
 
     private function createExportJson(Course $course, $dirName): void
@@ -78,7 +75,9 @@ class ExportImportService implements ExportImportServiceContract
         $this->fixAllPathsBeforeZipping($courseId);
         $dirName = $this->copyCourseFilesToExportFolder($courseId);
 
-        $course = $this->courseRepository->findWith($courseId, ['*'], ['lessons.topics.topicable', 'scorm.scos']);
+        // $course = $this->courseRepository->findWith($courseId, ['*'], ['lessons.topics.topicable', 'scorm.scos']);
+
+        $course = Course::with(['lessons.topics.topicable', 'scorm.scos'])->findOrFail($courseId);
         $this->createExportJson($course, $dirName);
 
         $zipUrl = $this->createZipFromFolder($dirName);
