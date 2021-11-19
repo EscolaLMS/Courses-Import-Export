@@ -1,6 +1,6 @@
 <?php
 
-namespace EscolaLms\Courses\Tests\Database\Factories;
+namespace EscolaLms\CoursesImportExport\Tests\Database\Factories;
 
 use EscolaLms\Courses\Tests\Models\User;
 
