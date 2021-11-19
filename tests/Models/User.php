@@ -1,6 +1,6 @@
 <?php
 
-namespace EscolaLms\Courses\Tests\Models;
+namespace EscolaLms\CoursesImportExport\Tests\Models;
 
 use EscolaLms\Courses\Models\User as CoursesUser;
 
