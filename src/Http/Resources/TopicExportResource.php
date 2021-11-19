@@ -2,50 +2,11 @@
 
 namespace EscolaLms\CoursesImportExport\Http\Resources;
 
-use EscolaLms\TopicTypes\Http\Resources\TopicType\Contacts\TopicTypeResourceContract;
-use EscolaLms\TopicTypes\Models\Contracts\TopicContentContract;
+use EscolaLms\Courses\Facades\Topic;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class TopicExportResource extends JsonResource
 {
-    /**
-     * @var array
-     *            All possible classes that can store content
-     */
-    private static array $contentClasses = [
-    ];
-
-    /**
-     * @param string $class fullname of a class that can be content
-     *
-     * @return array list of unique classes
-     */
-    public static function registerContentClass(string $modelClass, string $resourceClass): array
-    {
-        if (
-            class_exists($modelClass)
-            && (is_a($modelClass, TopicContentContract::class, true))
-            && class_exists($resourceClass)
-            && (is_a($resourceClass, TopicTypeResourceContract::class, true))
-            ) {
-            self::$contentClasses[$modelClass] = $resourceClass;
-        }
-
-        return self::$contentClasses;
-    }
-
-    public static function unregisterContentClass(string $class): array
-    {
-        unset(self::$contentClasses[$class]);
-
-        return self::$contentClasses;
-    }
-
-    public static function availableContentClasses(): array
-    {
-        return self::$contentClasses;
-    }
-
     /**
      * Transform the resource into an array.
      *
@@ -57,8 +18,9 @@ class TopicExportResource extends JsonResource
     {
         $topicable = $this->topicable;
 
-        if (array_key_exists($this->topicable_type, self::$contentClasses)) {
-            $resource = new self::$contentClasses[$this->topicable_type]($this->topicable);
+        if (Topic::getResourceClass($this->topicable_type, 'export')) {
+            $resourceClass = Topic::getResourceClass($this->topicable_type, 'export');
+            $resource = new $resourceClass($this->topicable);
             $topicable = $resource->toArray($request);
         }
 
