@@ -4,6 +4,7 @@ namespace EscolaLms\CoursesImportExport\Services;
 
 use EscolaLms\Courses\Http\Requests\CreateTopicAPIRequest;
 use EscolaLms\Courses\Models\Lesson;
+use EscolaLms\Courses\Models\Topic;
 use EscolaLms\Courses\Repositories\Contracts\CourseRepositoryContract;
 use EscolaLms\Courses\Repositories\Contracts\LessonRepositoryContract;
 use EscolaLms\Courses\Repositories\Contracts\TopicRepositoryContract;
@@ -11,10 +12,12 @@ use EscolaLms\Courses\Repositories\Contracts\TopicResourceRepositoryContract;
 use EscolaLms\CoursesImportExport\Http\Resources\CourseExportResource;
 use EscolaLms\CoursesImportExport\Models\Course;
 use EscolaLms\CoursesImportExport\Services\Contracts\ExportImportServiceContract;
+use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -25,7 +28,7 @@ class ExportImportService implements ExportImportServiceContract
     private CourseRepositoryContract $courseRepository;
     private LessonRepositoryContract $lessonRepository;
     private TopicRepositoryContract $topicRepository;
-    private TopicResourceRepositoryContract $topicResourceRepository;
+    private TopicResourceRepositoryContract $topicResourceRepo;
 
     public function __construct(
         CourseRepositoryContract $courseRepository,
@@ -36,7 +39,7 @@ class ExportImportService implements ExportImportServiceContract
         $this->courseRepository = $courseRepository;
         $this->lessonRepository = $lessonRepository;
         $this->topicRepository = $topicRepository;
-        $this->topicResourceRepository = $topicResourceRepository;
+        $this->topicResourceRepo = $topicResourceRepository;
     }
 
     private function fixAllPathsBeforeZipping(int $courseId): void
@@ -109,12 +112,19 @@ class ExportImportService implements ExportImportServiceContract
     {
         $dirPath = 'imports' . DIRECTORY_SEPARATOR . 'courses' . DIRECTORY_SEPARATOR . uniqid(rand(), true);
         $dirFullPath = $this->extractZipFile($zipFile, $dirPath);
-        $content = json_decode(File::get($dirFullPath . DIRECTORY_SEPARATOR . 'content.json'), true);
-        $course = DB::transaction(function () use ($content, $dirFullPath) {
-            return $this->createCourseFromImport($content, $dirFullPath);
-        });
 
-        Storage::deleteDirectory($dirPath);
+        try {
+            $content = json_decode(File::get($dirFullPath . DIRECTORY_SEPARATOR . 'content.json'), true);
+            $course = DB::transaction(function () use ($content, $dirFullPath) {
+                return $this->createCourseFromImport($content, $dirFullPath);
+            });
+
+        } catch (Exception $e) {
+            Log::error('[' . self::class . '] ' . $e->getMessage());
+            throw new Exception(__('Invalid data'));
+        } finally {
+            Storage::deleteDirectory($dirPath);
+        }
 
         return $course;
     }
@@ -175,7 +185,9 @@ class ExportImportService implements ExportImportServiceContract
                 $request->files->add([
                     $key => new UploadedFile(
                         $dirFullPath . DIRECTORY_SEPARATOR . $topicData[$key], $topicData[$key],
-                        null, null, true
+                        null,
+                        null,
+                        true
                     )
                 ]);
             }
@@ -184,23 +196,31 @@ class ExportImportService implements ExportImportServiceContract
         $topic = $this->topicRepository->createFromRequest($request);
 
         if (isset($topicData['resources']) && is_array($topicData['resources'])) {
-            foreach ($topicData['resources'] as $resource) {
-                if (isset($resource['path'])
-                    && isset($resource['name'])
-                    && File::exists($dirFullPath . DIRECTORY_SEPARATOR .
-                        $resource['path'] . DIRECTORY_SEPARATOR . $resource['name'])
-                ) {
-                    $this->topicResourceRepository->storeUploadedResourceForTopic(
-                        $topic,
-                        new UploadedFile($dirFullPath . DIRECTORY_SEPARATOR . $resource['path'] .
-                            DIRECTORY_SEPARATOR . $resource['name'], $resource['name']
-                        )
-                    );
-                }
-            }
+            $this->createTopicResources($topicData['resources'], $topic, $dirFullPath);
         }
 
         return $topic;
+    }
+
+    private function createTopicResources(array $resources, Topic $topic, string $dirFullPath): array
+    {
+        $createdResources = [];
+        foreach ($resources as $resource) {
+            if (isset($resource['path'])
+                && isset($resource['name'])
+                && File::exists($dirFullPath . DIRECTORY_SEPARATOR .
+                    $resource['path'] . DIRECTORY_SEPARATOR . $resource['name'])
+            ) {
+                $createdResources[] = $this->topicResourceRepo->storeUploadedResourceForTopic(
+                    $topic,
+                    new UploadedFile($dirFullPath . DIRECTORY_SEPARATOR . $resource['path'] .
+                        DIRECTORY_SEPARATOR . $resource['name'], $resource['name']
+                    )
+                );
+            }
+        }
+
+        return $createdResources;
     }
 
     private function addFilesToArrayBasedOnPath(array $data, string $dirFullPath): array
@@ -208,8 +228,11 @@ class ExportImportService implements ExportImportServiceContract
         foreach ($data as $key => $value) {
             if (Str::endsWith($key, '_path') && File::exists($dirFullPath . DIRECTORY_SEPARATOR . $value)) {
                 $fileKey = Str::before($key, '_path');
-                $data[$fileKey] = new UploadedFile($dirFullPath . DIRECTORY_SEPARATOR . $value, $value,
-                    null, null, true
+                $data[$fileKey] = new UploadedFile($dirFullPath . DIRECTORY_SEPARATOR . $value,
+                    $value,
+                    null,
+                    null,
+                    true
                 );
                 unset($data[$key]);
             }

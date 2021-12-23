@@ -19,6 +19,7 @@ use EscolaLms\TopicTypes\Models\TopicContent\Video;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use ZanySoft\Zip\Zip;
 
@@ -200,5 +201,21 @@ class CourseImportApiTest extends TestCase
                 Storage::assertExists($resource->path . DIRECTORY_SEPARATOR . $resource->name);
             }
         }
+    }
+
+    public function testErrorImportCourseFromZip(): void
+    {
+        Storage::put('invalid/invalid-content.json', 'Some dummy data');
+        $zip = Zip::create(Storage::path('invalid/course-import.zip'));
+        $zip->add(Storage::path('invalid/'), true);
+        $zip->close();
+
+        $admin = $this->makeAdmin();
+        $response = $this->actingAs($admin, 'api')->postJson('/api/admin/courses/zip/import', [
+            'file' => new UploadedFile(Storage::path('invalid/course-import.zip'),
+                'course-import.zip', null, null, true)
+        ]);
+
+        $response->assertStatus(400);
     }
 }

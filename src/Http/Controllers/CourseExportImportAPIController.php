@@ -8,6 +8,7 @@ use EscolaLms\CoursesImportExport\Http\Controllers\Swagger\CourseExportImportAPI
 use EscolaLms\CoursesImportExport\Http\Requests\CourseImportAPIRequest;
 use EscolaLms\CoursesImportExport\Http\Requests\GetCourseExportAPIRequest;
 use EscolaLms\CoursesImportExport\Services\Contracts\ExportImportServiceContract;
+use Exception;
 use Illuminate\Http\JsonResponse;
 
 /**
@@ -34,8 +35,12 @@ class CourseExportImportAPIController extends EscolaLmsBaseController implements
 
     public function import(CourseImportAPIRequest $request): JsonResponse
     {
-        $course = $this->exportImportService->import($request->file('file'));
+        try {
+            $course = $this->exportImportService->import($request->file('file'));
 
-        return $this->sendResponseForResource(CourseSimpleResource::make($course), __('Course imported successfully'));
+            return $this->sendResponseForResource(CourseSimpleResource::make($course), __('Course imported successfully'));
+        }  catch (Exception $e) {
+            return new JsonResponse(['error' => $e->getMessage()], 400);
+        }
     }
 }
