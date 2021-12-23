@@ -2,6 +2,7 @@
 
 namespace EscolaLms\CoursesImportExport\Services;
 
+use EscolaLms\Courses\Facades\Topic as TopicFacade;
 use EscolaLms\Courses\Http\Requests\CreateTopicAPIRequest;
 use EscolaLms\Courses\Models\Lesson;
 use EscolaLms\Courses\Repositories\Contracts\CourseRepositoryContract;
@@ -110,7 +111,6 @@ class ExportImportService implements ExportImportServiceContract
         $dirPath = 'imports' . DIRECTORY_SEPARATOR . 'courses' . DIRECTORY_SEPARATOR . uniqid(rand(), true);
         $dirFullPath = $this->extractZipFile($zipFile, $dirPath);
         $content = json_decode(File::get($dirFullPath . DIRECTORY_SEPARATOR . 'content.json'), true);
-
         $course = DB::transaction(function () use ($content, $dirFullPath) {
             return $this->createCourseFromImport($content, $dirFullPath);
         });
@@ -167,6 +167,8 @@ class ExportImportService implements ExportImportServiceContract
     {
         $topicData = array_merge($topicData, $topicData['topicable'] ?? []);
         unset($topicData['topicable']);
+
+        dd(TopicFacade::availableContentClasses());
 
         $request = new CreateTopicAPIRequest($topicData);
         $request->setValidator(Validator::make($topicData, $request->rules()));
