@@ -118,7 +118,6 @@ class ExportImportService implements ExportImportServiceContract
             $course = DB::transaction(function () use ($content, $dirFullPath) {
                 return $this->createCourseFromImport($content, $dirFullPath);
             });
-
         } catch (Exception $e) {
             Log::error('[' . self::class . '] ' . $e->getMessage());
             throw new Exception(__('Invalid data'));
@@ -184,7 +183,8 @@ class ExportImportService implements ExportImportServiceContract
             if (isset($topicData[$key]) && File::exists($dirFullPath . DIRECTORY_SEPARATOR . $topicData[$key])) {
                 $request->files->add([
                     $key => new UploadedFile(
-                        $dirFullPath . DIRECTORY_SEPARATOR . $topicData[$key], $topicData[$key],
+                        $dirFullPath . DIRECTORY_SEPARATOR . $topicData[$key],
+                        $topicData[$key],
                         null,
                         null,
                         true
@@ -228,7 +228,8 @@ class ExportImportService implements ExportImportServiceContract
         foreach ($data as $key => $value) {
             if (Str::endsWith($key, '_path') && File::exists($dirFullPath . DIRECTORY_SEPARATOR . $value)) {
                 $fileKey = Str::before($key, '_path');
-                $data[$fileKey] = new UploadedFile($dirFullPath . DIRECTORY_SEPARATOR . $value,
+                $data[$fileKey] = new UploadedFile(
+                    $dirFullPath . DIRECTORY_SEPARATOR . $value,
                     $value,
                     null,
                     null,

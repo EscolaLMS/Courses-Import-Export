@@ -38,8 +38,11 @@ class CourseExportImportAPIController extends EscolaLmsBaseController implements
         try {
             $course = $this->exportImportService->import($request->file('file'));
 
-            return $this->sendResponseForResource(CourseSimpleResource::make($course), __('Course imported successfully'));
-        }  catch (Exception $e) {
+            return $this->sendResponseForResource(
+                CourseSimpleResource::make($course),
+                __('Course imported successfully')
+            );
+        } catch (Exception $e) {
             return new JsonResponse(['error' => $e->getMessage()], 400);
         }
     }
