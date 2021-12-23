@@ -2,11 +2,12 @@
 
 namespace EscolaLms\CoursesImportExport\Services\Contracts;
 
-use EscolaLms\Courses\Models\Course;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\UploadedFile;
 
 interface ExportImportServiceContract
 {
     public function export(int $courseId): string;
 
-    public function import(string $path): Course;
+    public function import(UploadedFile $file): Model;
 }

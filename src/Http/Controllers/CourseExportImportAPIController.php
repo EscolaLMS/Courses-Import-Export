@@ -3,7 +3,9 @@
 namespace EscolaLms\CoursesImportExport\Http\Controllers;
 
 use EscolaLms\Core\Http\Controllers\EscolaLmsBaseController;
+use EscolaLms\Courses\Http\Resources\CourseSimpleResource;
 use EscolaLms\CoursesImportExport\Http\Controllers\Swagger\CourseExportImportAPISwagger;
+use EscolaLms\CoursesImportExport\Http\Requests\CourseImportAPIRequest;
 use EscolaLms\CoursesImportExport\Http\Requests\GetCourseExportAPIRequest;
 use EscolaLms\CoursesImportExport\Services\Contracts\ExportImportServiceContract;
 use Illuminate\Http\JsonResponse;
@@ -28,5 +30,12 @@ class CourseExportImportAPIController extends EscolaLmsBaseController implements
         $export = $this->exportImportService->export($course_id);
 
         return $this->sendResponse($export, __('Export created'));
+    }
+
+    public function import(CourseImportAPIRequest $request): JsonResponse
+    {
+        $course = $this->exportImportService->import($request->file('file'));
+
+        return $this->sendResponseForResource(CourseSimpleResource::make($course), __('Course imported successfully'));
     }
 }
