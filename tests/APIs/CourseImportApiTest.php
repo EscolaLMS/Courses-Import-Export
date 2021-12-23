@@ -10,6 +10,7 @@ use EscolaLms\CoursesImportExport\Database\Seeders\CoursesExportImportPermission
 use EscolaLms\CoursesImportExport\Http\Resources\CourseExportResource;
 use EscolaLms\CoursesImportExport\Models\Course;
 use EscolaLms\CoursesImportExport\Tests\TestCase;
+use EscolaLms\TopicTypes\Models\Contracts\TopicFileContentContract;
 use EscolaLms\TopicTypes\Models\TopicContent\Audio;
 use EscolaLms\TopicTypes\Models\TopicContent\Image;
 use EscolaLms\TopicTypes\Models\TopicContent\PDF;
@@ -37,26 +38,41 @@ class CourseImportApiTest extends TestCase
         $this->user->assignRole('admin');
         $this->dirPath = 'test/import/courses/';
 
-        UploadedFile::fake()->image('course_image.jpg')->storeAs($this->dirPath, 'course_image.jpg');
-        UploadedFile::fake()->image('course_poster.jpg')->storeAs($this->dirPath, 'course_poster.jpg');
-        UploadedFile::fake()->create('course_video.mp4s')->storeAs($this->dirPath, 'course_video.mp4s');
+        $video = new UploadedFile(realpath(
+            __DIR__ . '/../mocks/1.mp4'), '1.mp4', 'video/mp4', null, true
+        );
+        $video->storeAs($this->dirPath, 'dummy.mp4');
 
-        UploadedFile::fake()->create('dummy.mp3')->storeAs($this->dirPath, 'topic/1/dummy.mp3');
-        UploadedFile::fake()->create('dummy1.pdf')->storeAs($this->dirPath, 'topic/1/resources/dummy1.pdf');
-        UploadedFile::fake()->create('dummy2.pdf')->storeAs($this->dirPath, 'topic/1/resources/dummy2.pdf');
+        $pdf = new UploadedFile(realpath(
+            __DIR__ . '/../mocks/1.pdf'), '1.pdf', 'application/pdf', null, true
+        );
+        $pdf->storeAs($this->dirPath, 'dummy.pdf');
+
+        $pdf2 = new UploadedFile(realpath(
+            __DIR__ . '/../mocks/1.pdf'), '1.pdf', 'application/pdf', null, true
+        );
+        $pdf2->storeAs($this->dirPath . 'resources', 'dummy2.pdf');
+
+        $mp3= new UploadedFile(realpath(
+            __DIR__ . '/../mocks/1.mp3'), '1.mp3', 'audio/mp3', null, true
+        );
+        $mp3->storeAs($this->dirPath, 'dummy.mp3');
+
+        UploadedFile::fake()->image('course_image.jpg')->storeAs($this->dirPath, 'course_image.jpg');
+        UploadedFile::fake()->image('course_poster.png')->storeAs($this->dirPath, 'course_poster.png');
         UploadedFile::fake()->image('dummy.jpg')->storeAs($this->dirPath, 'topic/2/dummy.jpg');
         UploadedFile::fake()->image('dummy.png')->storeAs($this->dirPath, 'topic/3/dummy.png');
-        UploadedFile::fake()->create('dummy.pdf')->storeAs($this->dirPath, 'topic/4/dummy.pdf');
-        UploadedFile::fake()->create('dummy.pdf')->storeAs($this->dirPath, 'topic/4/resources/dummy.pdf');
         UploadedFile::fake()->image('dummy.jpg')->storeAs($this->dirPath, 'topic/4/dummy.jpg');
+        UploadedFile::fake()->image('dummy.jpg')->storeAs($this->dirPath, 'topic/4/resources/dummy.jpg');
+        UploadedFile::fake()->image('dummy.jpg')->storeAs($this->dirPath, 'topic/4/resources/dummy2.jpg');
 
         $course = Course::factory()->create([
             'author_id' => $this->user->getKey(),
         ]);
         $course->update([
             'image_path' => 'course_image.jpg',
-            'video_path' => 'course_video.mp4',
-            'poster_path' => 'course_poster.jpg',
+            'video_path' => 'dummy.mp4',
+            'poster_path' => 'course_poster.png',
         ]);
         $firstLesson = Lesson::factory()->create([
             'course_id' => $course->getKey(),
@@ -78,16 +94,16 @@ class CourseImportApiTest extends TestCase
         ]);
 
         $topicable_audio = Audio::factory()->create([
-            'value' => 'topic/1/dummy.mp3',
+            'value' => 'dummy.mp3',
         ]);
         $topicable_image = Image::factory()->create([
             'value' => 'topic/2/dummy.jpg',
         ]);
         $topicable_pdf = PDF::factory()->create([
-            'value' => 'topic/3/dummy.pdf',
+            'value' => 'dummy.pdf',
         ]);
         $topicable_video = Video::factory()->create([
-            'value' => 'topic/4/dummy.mp4',
+            'value' => 'dummy.mp4',
             'poster' => 'topic/4/dummy.jpg',
         ]);
         $topicable_richtexts = RichText::factory()->create();
@@ -98,30 +114,29 @@ class CourseImportApiTest extends TestCase
         $topic_video->topicable()->associate($topicable_video)->save();
         $topic_richtexts->topicable()->associate($topicable_richtexts)->save();
 
-        $topic_audio_resource_1 = TopicResource::factory()->create([
+        TopicResource::factory()->create([
             'topic_id' => $topic_audio->getKey(),
-            'path' => 'topic/1/resources',
-            'name' => 'dummy1.pdf',
-        ]);
-
-        $topic_audio_resource_2 = TopicResource::factory()->create([
-            'topic_id' => $topic_audio->getKey(),
-            'path' => 'topic/1/resources',
+            'path' => 'resources',
             'name' => 'dummy2.pdf',
         ]);
 
-        $topic_video_resource = TopicResource::factory()->create([
+        TopicResource::factory()->create([
             'topic_id' => $topic_video->getKey(),
             'path' => 'topic/4/resources',
-            'name' => 'dummy.pdf',
+            'name' => 'dummy.jpg',
+        ]);
+
+        TopicResource::factory()->create([
+            'topic_id' => $topic_video->getKey(),
+            'path' => 'topic/4/resources',
+            'name' => 'dummy2.jpg',
         ]);
 
         $this->course = $course;
-
         $courseResource = CourseExportResource::make($course);
-        $content = json_encode($courseResource);
+        $this->content = json_encode($courseResource);
 
-        Storage::put($this->dirPath . 'content.json', $content);
+        Storage::put($this->dirPath . 'content.json', $this->content);
         $zip = Zip::create(Storage::path($this->dirPath . 'course-import.zip'));
         $zip->add(Storage::path($this->dirPath), true);
         $zip->close();
@@ -135,22 +150,55 @@ class CourseImportApiTest extends TestCase
 
     public function testAccessToImportCourseFromZip(): void
     {
-        $admin = $this->makeAdmin();
+        $tutor = $this->makeInstructor();
+        $response = $this->actingAs($tutor, 'api')->postJson('/api/admin/courses/zip/import', [
+            'file' => new UploadedFile(Storage::path($this->dirPath . 'course-import.zip'),
+                'course-import.zip', null, null, true)
+        ]);
+
+        $response->assertForbidden();
+
         $zipFile = [
             'file' => new UploadedFile(Storage::path($this->dirPath . 'course-import.zip'),
                 'course-import.zip', null, null, true)
         ];
 
-        $response = $this->actingAs($admin, 'api')->postJson('/api/admin/courses/zip/import', $zipFile);
-        $response->assertCreated();
-
-        $tutor = $this->makeInstructor();
-        $response = $this->actingAs($tutor, 'api')->postJson('/api/admin/courses/zip/import', $zipFile);
-        $response->assertForbidden();
-
         $tutor->givePermissionTo('import course');
 
         $response = $this->actingAs($tutor, 'api')->postJson('/api/admin/courses/zip/import', $zipFile);
         $response->assertCreated();
+    }
+
+    public function testImportCourseFromZip(): void
+    {
+        $admin = $this->makeAdmin();
+        $this->response = $this->actingAs($admin, 'api')->postJson('/api/admin/courses/zip/import', [
+            'file' => new UploadedFile(Storage::path($this->dirPath . 'course-import.zip'),
+                'course-import.zip', null, null, true)
+        ]);
+        $this->response->assertCreated();
+
+        $this->response->assertJsonFragment([
+           'title' => $this->course->title,
+        ]);
+
+        $responseData = $this->response->getData()->data;
+        Storage::assertExists($responseData->image_path);
+        Storage::assertExists($responseData->video_path);
+        Storage::assertExists($responseData->poster_path);
+
+        $lesson = Lesson::where('course_id', $responseData->id)->first();
+        $topics = $lesson->topics;
+
+        foreach ($topics as $topic) {
+            $this->assertNotEmpty($topic->topicable->value);
+            if ($topic->topicable instanceof TopicFileContentContract) {
+                Storage::assertExists($topic->topicable->value);
+            }
+
+            foreach ($topic->resources as $resource) {
+                Storage::assertExists($resource->path . DIRECTORY_SEPARATOR . $resource->name);
+            }
+        }
     }
 }

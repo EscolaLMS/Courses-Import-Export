@@ -2,7 +2,6 @@
 
 namespace EscolaLms\CoursesImportExport\Services;
 
-use EscolaLms\Courses\Facades\Topic as TopicFacade;
 use EscolaLms\Courses\Http\Requests\CreateTopicAPIRequest;
 use EscolaLms\Courses\Models\Lesson;
 use EscolaLms\Courses\Repositories\Contracts\CourseRepositoryContract;
@@ -167,8 +166,6 @@ class ExportImportService implements ExportImportServiceContract
     {
         $topicData = array_merge($topicData, $topicData['topicable'] ?? []);
         unset($topicData['topicable']);
-
-        dd(TopicFacade::availableContentClasses());
 
         $request = new CreateTopicAPIRequest($topicData);
         $request->setValidator(Validator::make($topicData, $request->rules()));
