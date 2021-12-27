@@ -42,6 +42,50 @@
                     }
                 ]
             }
+        },
+        "/api/admin/courses/zip/import": {
+            "post": {
+                "tags": [
+                    "Admin Courses"
+                ],
+                "description": "Imports course from ZIP package ",
+                "operationId": "6d4f418d042a8de8c15875c41ece860f",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "file": {
+                                        "type": "file",
+                                        "format": "file"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Course imported successfully"
+                    },
+                    "401": {
+                        "description": "endpoint requires authentication"
+                    },
+                    "403": {
+                        "description": "user doesn't have required access rights"
+                    },
+                    "500": {
+                        "description": "server-side error"
+                    }
+                },
+                "security": [
+                    {
+                        "passport": []
+                    }
+                ]
+            }
         }
     }
 }
