@@ -28,4 +28,17 @@ class CoursesExportPolicy
 
         return false;
     }
+
+    public function import(User $user): bool
+    {
+        if ($user->hasRole('admin')) {
+            return true;
+        }
+
+        if ($user->can('import course')) {
+            return true;
+        }
+
+        return false;
+    }
 }

@@ -11,6 +11,7 @@ use EscolaLms\Courses\Tests\Models\User as UserTest;
 use EscolaLms\CoursesImportExport\EscolaLmsCoursesImportExportServiceProvider;
 use EscolaLms\Scorm\EscolaLmsScormServiceProvider;
 use EscolaLms\Tags\EscolaLmsTagsServiceProvider;
+use EscolaLms\TopicTypes\EscolaLmsTopicTypesServiceProvider;
 use Laravel\Passport\Passport;
 use Laravel\Passport\PassportServiceProvider;
 use Spatie\Permission\PermissionServiceProvider;
@@ -39,7 +40,8 @@ class TestCase extends \EscolaLms\Core\Tests\TestCase
             EscolaLmsScormServiceProvider::class,
             EscolaLmsTagsServiceProvider::class,
             EscolaLmsCoursesImportExportServiceProvider::class,
-            EscolaLmsSettingsServiceProvider::class
+            EscolaLmsSettingsServiceProvider::class,
+            EscolaLmsTopicTypesServiceProvider::class,
         ];
     }
 
