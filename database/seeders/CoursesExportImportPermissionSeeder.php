@@ -2,6 +2,7 @@
 
 namespace EscolaLms\CoursesImportExport\Database\Seeders;
 
+use EscolaLms\Cart\Enums\CoursesImportExportPermissionsEnum;
 use EscolaLms\Core\Enums\UserRole;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
@@ -14,9 +15,14 @@ class CoursesExportImportPermissionSeeder extends Seeder
         // create permissions
         $admin = Role::findOrCreate(UserRole::ADMIN, 'api');
 
-        Permission::findOrCreate('export course', 'api');
-        Permission::findOrCreate('import course', 'api');
+        Permission::findOrCreate(CoursesImportExportPermissionsEnum::COURSES_EXPORT, 'api');
+        Permission::findOrCreate(CoursesImportExportPermissionsEnum::COURSES_IMPORT, 'api');
+        Permission::findOrCreate(CoursesImportExportPermissionsEnum::COURSES_EXPORT_OWNED, 'api');
 
-        $admin->givePermissionTo(['export course', 'import course']);
+        $admin->givePermissionTo([
+            CoursesImportExportPermissionsEnum::COURSES_EXPORT,
+            CoursesImportExportPermissionsEnum::COURSES_IMPORT,
+            CoursesImportExportPermissionsEnum::COURSES_EXPORT_OWNED,
+        ]);
     }
 }

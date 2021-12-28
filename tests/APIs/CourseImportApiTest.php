@@ -2,6 +2,7 @@
 
 namespace Tests\APIs;
 
+use EscolaLms\Cart\Enums\CoursesImportExportPermissionsEnum;
 use EscolaLms\Core\Tests\CreatesUsers;
 use EscolaLms\Courses\Models\Lesson;
 use EscolaLms\Courses\Models\Topic;
@@ -164,7 +165,7 @@ class CourseImportApiTest extends TestCase
                 'course-import.zip', null, null, true)
         ];
 
-        $tutor->givePermissionTo('import course');
+        $tutor->givePermissionTo(CoursesImportExportPermissionsEnum::COURSES_IMPORT);
 
         $response = $this->actingAs($tutor, 'api')->postJson('/api/admin/courses/zip/import', $zipFile);
         $response->assertCreated();
