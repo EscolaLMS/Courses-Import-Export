@@ -2,8 +2,8 @@
 
 namespace EscolaLms\CoursesImportExport\Database\Seeders;
 
-use EscolaLms\Cart\Enums\CoursesImportExportPermissionsEnum;
 use EscolaLms\Core\Enums\UserRole;
+use EscolaLms\CoursesImportExport\Enums\CoursesImportExportPermissionsEnum;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;

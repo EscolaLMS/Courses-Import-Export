@@ -2,12 +2,12 @@
 
 namespace Tests\APIs;
 
-use EscolaLms\Cart\Enums\CoursesImportExportPermissionsEnum;
 use EscolaLms\Core\Tests\CreatesUsers;
 use EscolaLms\Courses\Models\Lesson;
 use EscolaLms\Courses\Models\Topic;
 use EscolaLms\Courses\Models\TopicResource;
 use EscolaLms\CoursesImportExport\Database\Seeders\CoursesExportImportPermissionSeeder;
+use EscolaLms\CoursesImportExport\Enums\CoursesImportExportPermissionsEnum;
 use EscolaLms\CoursesImportExport\Http\Resources\CourseExportResource;
 use EscolaLms\CoursesImportExport\Models\Course;
 use EscolaLms\CoursesImportExport\Tests\TestCase;

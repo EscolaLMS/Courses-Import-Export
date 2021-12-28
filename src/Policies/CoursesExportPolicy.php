@@ -2,8 +2,8 @@
 
 namespace EscolaLms\CoursesImportExport\Policies;
 
-use EscolaLms\Cart\Enums\CoursesImportExportPermissionsEnum;
 use EscolaLms\Core\Models\User;
+use EscolaLms\CoursesImportExport\Enums\CoursesImportExportPermissionsEnum;
 use EscolaLms\CoursesImportExport\Models\Course;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Auth\Access\Response;
