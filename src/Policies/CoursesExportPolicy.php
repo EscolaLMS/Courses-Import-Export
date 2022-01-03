@@ -3,6 +3,7 @@
 namespace EscolaLms\CoursesImportExport\Policies;
 
 use EscolaLms\Core\Models\User;
+use EscolaLms\CoursesImportExport\Enums\CoursesImportExportPermissionsEnum;
 use EscolaLms\CoursesImportExport\Models\Course;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Auth\Access\Response;
@@ -19,10 +20,13 @@ class CoursesExportPolicy
         if ($user->hasRole('admin')) {
             return true;
         }
-        if ($user->can('export course') && $course->author_id === $user->id) {
+        if ($user->can(CoursesImportExportPermissionsEnum::COURSES_EXPORT)) {
             return true;
         }
-        if ($user->can('export course') && $course->author_id !== $user->id) {
+        if ($user->can(CoursesImportExportPermissionsEnum::COURSES_EXPORT_OWNED) && $course->author_id === $user->id) {
+            return true;
+        }
+        if ($user->can(CoursesImportExportPermissionsEnum::COURSES_EXPORT_OWNED) && $course->author_id !== $user->id) {
             return Response::deny('You do not own this course.');
         }
 
@@ -35,7 +39,7 @@ class CoursesExportPolicy
             return true;
         }
 
-        if ($user->can('import course')) {
+        if ($user->can(CoursesImportExportPermissionsEnum::COURSES_IMPORT)) {
             return true;
         }
 
