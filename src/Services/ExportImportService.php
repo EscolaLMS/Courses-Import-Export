@@ -208,14 +208,11 @@ class ExportImportService implements ExportImportServiceContract
         foreach ($resources as $resource) {
             if (isset($resource['path'])
                 && isset($resource['name'])
-                && File::exists($dirFullPath . DIRECTORY_SEPARATOR .
-                    $resource['path'] . DIRECTORY_SEPARATOR . $resource['name'])
+                && File::exists($dirFullPath . DIRECTORY_SEPARATOR . $resource['path'])
             ) {
                 $createdResources[] = $this->topicResourceRepo->storeUploadedResourceForTopic(
                     $topic,
-                    new UploadedFile($dirFullPath . DIRECTORY_SEPARATOR . $resource['path'] .
-                        DIRECTORY_SEPARATOR . $resource['name'], $resource['name']
-                    )
+                    new UploadedFile($dirFullPath . DIRECTORY_SEPARATOR . $resource['path'], $resource['name'])
                 );
             }
         }

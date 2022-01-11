@@ -118,19 +118,19 @@ class CourseImportApiTest extends TestCase
 
         TopicResource::factory()->create([
             'topic_id' => $topic_audio->getKey(),
-            'path' => 'resources',
+            'path' => 'resources/dummy2.pdf',
             'name' => 'dummy2.pdf',
         ]);
 
         TopicResource::factory()->create([
             'topic_id' => $topic_video->getKey(),
-            'path' => 'topic/4/resources',
+            'path' => 'topic/4/resources/dummy.jpg',
             'name' => 'dummy.jpg',
         ]);
 
         TopicResource::factory()->create([
             'topic_id' => $topic_video->getKey(),
-            'path' => 'topic/4/resources',
+            'path' => 'topic/4/resources/dummy2.jpg',
             'name' => 'dummy2.jpg',
         ]);
 
