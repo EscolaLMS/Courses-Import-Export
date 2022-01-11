@@ -100,7 +100,7 @@ class ExportImportService implements ExportImportServiceContract
 
         // $course = $this->courseRepository->findWith($courseId, ['*'], ['lessons.topics.topicable', 'scorm.scos']);
 
-        $course = Course::with(['lessons.topics.topicable', 'scorm.scos'])->findOrFail($courseId);
+        $course = Course::with(['lessons.topics.topicable', 'scormSco'])->findOrFail($courseId);
         $this->createExportJson($course, $dirName);
 
         $zipUrl = $this->createZipFromFolder($dirName);
