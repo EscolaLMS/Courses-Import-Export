@@ -199,7 +199,7 @@ class CourseImportApiTest extends TestCase
             }
 
             foreach ($topic->resources as $resource) {
-                Storage::assertExists($resource->path . DIRECTORY_SEPARATOR . $resource->name);
+                Storage::assertExists($resource->path);
             }
         }
     }
