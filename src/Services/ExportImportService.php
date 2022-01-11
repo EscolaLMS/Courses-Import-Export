@@ -100,7 +100,7 @@ class ExportImportService implements ExportImportServiceContract
 
         // $course = $this->courseRepository->findWith($courseId, ['*'], ['lessons.topics.topicable', 'scorm.scos']);
 
-        $course = Course::with(['lessons.topics.topicable', 'scorm.scos'])->findOrFail($courseId);
+        $course = Course::with(['lessons.topics.topicable', 'scormSco'])->findOrFail($courseId);
         $this->createExportJson($course, $dirName);
 
         $zipUrl = $this->createZipFromFolder($dirName);
@@ -208,14 +208,11 @@ class ExportImportService implements ExportImportServiceContract
         foreach ($resources as $resource) {
             if (isset($resource['path'])
                 && isset($resource['name'])
-                && File::exists($dirFullPath . DIRECTORY_SEPARATOR .
-                    $resource['path'] . DIRECTORY_SEPARATOR . $resource['name'])
+                && File::exists($dirFullPath . DIRECTORY_SEPARATOR . $resource['path'])
             ) {
                 $createdResources[] = $this->topicResourceRepo->storeUploadedResourceForTopic(
                     $topic,
-                    new UploadedFile($dirFullPath . DIRECTORY_SEPARATOR . $resource['path'] .
-                        DIRECTORY_SEPARATOR . $resource['name'], $resource['name']
-                    )
+                    new UploadedFile($dirFullPath . DIRECTORY_SEPARATOR . $resource['path'], $resource['name'])
                 );
             }
         }
