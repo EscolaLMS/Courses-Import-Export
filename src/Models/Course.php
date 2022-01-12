@@ -3,6 +3,8 @@
 namespace EscolaLms\CoursesImportExport\Models;
 
 use EscolaLms\Courses\Models\Course as BaseCourse;
+use EscolaLms\Scorm\Services\Contracts\ScormServiceContract;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 
 class Course extends BaseCourse
@@ -26,12 +28,32 @@ class Course extends BaseCourse
         return [];
     }
 
+    public function fixScormAssetPath(): array
+    {
+        if (!$this->scormSco) {
+            return [];
+        }
+
+        $scorm = $this->scormSco->scorm;
+        $destination = sprintf('courses/%d/%s', $this->id, basename('scorm.zip'));
+
+        $scormService = app(ScormServiceContract::class);
+        $scormZipPath = $scormService->zipScorm($scorm->getKey());
+
+        if (!Storage::exists($destination)) {
+            Storage::move($scormZipPath, $destination);
+        }
+
+        return $destination ? [$destination] : [];
+    }
+
     public function fixAssetPaths(): array
     {
         $results = [];
-        $results = $results + $this->fixPath('image');
-        $results = $results + $this->fixPath('video');
-        $results = $results + $this->fixPath('poster');
+        $results = $results + $this->fixPath('image_path');
+        $results = $results + $this->fixPath('video_path');
+        $results = $results + $this->fixPath('poster_path');
+        $results = $results + $this->fixScormAssetPath();
 
         foreach ($this->lessons as $lesson) {
             foreach ($lesson->topics as $topic) {

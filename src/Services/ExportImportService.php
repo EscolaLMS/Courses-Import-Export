@@ -98,14 +98,12 @@ class ExportImportService implements ExportImportServiceContract
         $this->fixAllPathsBeforeZipping($courseId);
         $dirName = $this->copyCourseFilesToExportFolder($courseId);
 
-        // $course = $this->courseRepository->findWith($courseId, ['*'], ['lessons.topics.topicable', 'scorm.scos']);
+        // $course = $this->courseRepository->findWith($courseId, ['*'], ['lessons.topics.topicable', 'scormSco']);
 
         $course = Course::with(['lessons.topics.topicable', 'scormSco'])->findOrFail($courseId);
         $this->createExportJson($course, $dirName);
 
-        $zipUrl = $this->createZipFromFolder($dirName);
-
-        return $zipUrl;
+        return $this->createZipFromFolder($dirName);
     }
 
     public function import(UploadedFile $zipFile): Model
