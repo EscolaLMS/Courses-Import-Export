@@ -3,24 +3,36 @@
 namespace EscolaLms\CoursesImportExport\Strategies;
 
 use EscolaLms\CoursesImportExport\Strategies\Contract\TopicImportStrategy;
-use EscolaLms\HeadlessH5P\Services\Contracts\HeadlessH5PServiceContract;
-use EscolaLms\HeadlessH5P\Services\HeadlessH5PService;
-use EscolaLms\Scorm\Services\Contracts\ScormServiceContract;
+use EscolaLms\HeadlessH5P\Repositories\Contracts\H5PContentRepositoryContract;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\File;
+
 
 class H5PTopicTypeStrategy implements TopicImportStrategy
 {
-    private HeadlessH5PServiceContract $h5PService;
+    private H5PContentRepositoryContract $h5PContentRepository;
 
-    public function __construct(HeadlessH5PServiceContract $h5PService)
+    public function __construct()
     {
-        $this->h5PService = $h5PService;
+        $this->h5PContentRepository = app(H5PContentRepositoryContract::class);
     }
 
     function make(string $path, array $data): ?int
     {
-        // TODO implement
-        // return $this->h5PService->uploadFile($contentId, $field, $token, $nonce);
-        return null;
+        $filePath = $path . DIRECTORY_SEPARATOR . $data['h5p_file'];
+        if (!File::exists($filePath)) {
+            return null;
+        }
+
+        $file = new UploadedFile(
+            $filePath,
+            'export.h5p',
+            null,
+            null,
+            true
+        );
+
+        $h5p = $this->h5PContentRepository->upload($file);
+        return $h5p ? $h5p->getKey() : null;
     }
 }

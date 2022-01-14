@@ -16,9 +16,12 @@ class ScormScoTopicTypeStrategy implements TopicImportStrategy
         $this->scormService = app(ScormServiceContract::class);
     }
 
-    // TODO return eloquent model
     function make(string $path, array $data): ?int
     {
+        if (!$data['identifier'] || !$data['scorm_file']) {
+            return null;
+        }
+
         $filePath = $path . DIRECTORY_SEPARATOR . $data['scorm_file'];
         if (!File::exists($filePath)) {
             return null;

@@ -115,13 +115,12 @@ class ExportImportService implements ExportImportServiceContract
 
     public function import(UploadedFile $zipFile): Model
     {
-        $uuid = uniqid(rand(), true);
-        $dirPath = 'imports' . DIRECTORY_SEPARATOR . 'courses' . DIRECTORY_SEPARATOR . $uuid;
+        $dirPath = 'imports' . DIRECTORY_SEPARATOR . 'courses' . DIRECTORY_SEPARATOR . uniqid(rand(), true);
         $dirFullPath = $this->extractZipFile($zipFile, $dirPath);
         try {
             $content = json_decode(File::get($dirFullPath . DIRECTORY_SEPARATOR . 'content.json'), true);
-            $course = DB::transaction(function () use ($content, $dirFullPath, $uuid) {
-                return $this->createCourseFromImport($content, $dirFullPath, $uuid);
+            $course = DB::transaction(function () use ($content, $dirFullPath) {
+                return $this->createCourseFromImport($content, $dirFullPath);
             });
         } catch (Exception $e) {
             Log::error('[' . self::class . '] ' . $e->getMessage());
@@ -145,13 +144,13 @@ class ExportImportService implements ExportImportServiceContract
         return $dirFullPath;
     }
 
-    private function createCourseFromImport(array $courseData, string $dirFullPath, string $uuid): Model
+    private function createCourseFromImport(array $courseData, string $dirFullPath): Model
     {
         unset($courseData['author_id']);
 
         $courseData = $this->addFilesToArrayBasedOnPath($courseData, $dirFullPath);
 
-        if ($courseData['scorm_sco']) {
+        if (isset($courseData['scorm_sco'])) {
             $strategy = new ScormScoTopicTypeStrategy();
             $courseData['scorm_sco_id'] = $strategy->make($dirFullPath, $courseData['scorm_sco']);
         }
@@ -189,7 +188,6 @@ class ExportImportService implements ExportImportServiceContract
         $topicData = array_merge($topicData, $topicData['topicable'] ?? []);
         unset($topicData['topicable']);
 
-        // TODO implement h5p strategy
         if (in_array($topicData['topicable_type'], $this->topicTypes)) {
             $strategy = $this->getTopicTypeImportStrategy($topicData['topicable_type']);
             $topicData['value'] = $strategy->make($dirFullPath, $topicData);
