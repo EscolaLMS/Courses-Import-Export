@@ -3,6 +3,7 @@
 namespace EscolaLms\CoursesImportExport\Models;
 
 use EscolaLms\Courses\Models\Course as BaseCourse;
+use EscolaLms\CoursesImportExport\Enums\CoursesImportExportEnum;
 use EscolaLms\Scorm\Services\Contracts\ScormServiceContract;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
@@ -35,7 +36,7 @@ class Course extends BaseCourse
         }
 
         $scorm = $this->scormSco->scorm;
-        $destination = sprintf('courses/%d/%s', $this->id, basename('scorm.zip'));
+        $destination = sprintf('courses/%d/%s', $this->id, basename(CoursesImportExportEnum::SCORM_FILE));
 
         $scormService = app(ScormServiceContract::class);
         $scormZipPath = $scormService->zipScorm($scorm->getKey());
