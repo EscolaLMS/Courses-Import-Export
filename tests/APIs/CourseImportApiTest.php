@@ -219,4 +219,24 @@ class CourseImportApiTest extends TestCase
 
         $response->assertStatus(400);
     }
+
+    public function testImportCourseWithScormSco(): void
+    {
+        $admin = $this->makeAdmin();
+
+        $courseZip = new UploadedFile(realpath(
+            __DIR__ . '/../mocks/course_sco.zip'), 'course.zip', null, null, true
+        );
+
+        $response = $this->actingAs($admin, 'api')->postJson('/api/admin/courses/zip/import', [
+            'file' => $courseZip
+        ]);
+
+        $data = $response->getData()->data;
+
+        $response->assertCreated();
+        $this->assertDatabaseHas('courses', [
+            'scorm_sco_id' => $data->scorm_sco_id
+        ]);
+    }
 }
