@@ -220,25 +220,40 @@ class CourseImportApiTest extends TestCase
         $response->assertStatus(400);
     }
 
-    public function testImportCourseWithScormSco(): void
+    public function testImportCourseWithScormScoAndH5P(): void
     {
         $admin = $this->makeAdmin();
 
         $courseZip = new UploadedFile(realpath(
-            __DIR__ . '/../mocks/course_sco.zip'), 'course.zip', null, null, true
+            __DIR__ . '/../mocks/course_sco_h5p.zip'), 'course_sco_h5p.zip', null, null, true
         );
 
         $response = $this->actingAs($admin, 'api')->postJson('/api/admin/courses/zip/import', [
             'file' => $courseZip
-        ]);
+        ])->assertCreated();
 
         $data = $response->getData()->data;
+        $lesson = $data->lessons[0];
+        $topic = $lesson->topics[0];
 
-        $response->assertCreated();
         $this->assertDatabaseHas('courses', [
             'id' => $data->id,
             'title' => $data->title,
+            'author_id' => $admin->getKey(),
             'scorm_sco_id' => $data->scorm_sco_id
         ]);
+        $this->assertDatabaseHas('lessons', [
+            'id' => $lesson->id,
+            'title' => $lesson->title,
+            'course_id' => $data->id,
+        ]);
+        $this->assertDatabaseHas('topics', [
+            'id' => $topic->id,
+            'title' => $topic->title,
+            'lesson_id' => $topic->lesson_id,
+        ]);
+
+        $this->assertEquals(1, count($data->lessons));
+        $this->assertEquals(2, count($data->lessons[0]->topics));
     }
 }
