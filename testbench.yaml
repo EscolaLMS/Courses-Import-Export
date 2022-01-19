@@ -16,3 +16,4 @@ providers:
   - EscolaLms\Tags\EscolaLmsTagsServiceProvider
   - EscolaLms\Scorm\EscolaLmsScormServiceProvider
   - EscolaLms\CoursesImportExport\EscolaLmsCoursesImportExportServiceProvider
+  - EscolaLms\HeadlessH5P\HeadlessH5PServiceProvider

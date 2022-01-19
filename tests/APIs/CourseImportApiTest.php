@@ -252,7 +252,7 @@ class CourseImportApiTest extends TestCase
         $admin = $this->makeAdmin();
 
         $courseZip = new UploadedFile(realpath(
-            __DIR__ . '/../mocks/course_sco_h5p.zip'), 'course_sco_h5p.zip', null, null, true
+            __DIR__ . '/../mocks/course.zip'), 'course.zip', null, null, true
         );
 
         $response = $this->actingAs($admin, 'api')->postJson('/api/admin/courses/zip/import', [
@@ -281,6 +281,6 @@ class CourseImportApiTest extends TestCase
         ]);
 
         $this->assertEquals(1, count($data->lessons));
-        $this->assertEquals(2, count($data->lessons[0]->topics));
+        $this->assertEquals(3, count($data->lessons[0]->topics));
     }
 }
