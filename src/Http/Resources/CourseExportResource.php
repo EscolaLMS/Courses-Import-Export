@@ -43,7 +43,6 @@ class CourseExportResource extends JsonResource
             'video_path' => self::sanitizePath($course->video_path),
             'base_price' => $course->base_price,
             'duration' => $course->duration,
-            // 'author_id' => $course->author_id,
             'scorm_sco' => $this->when($course->scorm_sco_id !== null, fn () => CourseScormScoExportResource::make($course)),
             'active' => $course->active,
             'subtitle' => $course->subtitle,
@@ -52,6 +51,8 @@ class CourseExportResource extends JsonResource
             'level' => $course->level,
             'lessons' => LessonExportResource::collection($course->lessons->sortBy('order')),
             'poster_path' => self::sanitizePath($course->poster_path),
+            'categories' => CategoryExportResource::collection($this->categories),
+            'tags' => $course->tags
         ];
 
         return self::apply($fields, $this);

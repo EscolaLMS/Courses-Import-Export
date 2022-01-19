@@ -2,6 +2,7 @@
 
 namespace Tests\APIs;
 
+use EscolaLms\Categories\Models\Category;
 use EscolaLms\Core\Tests\CreatesUsers;
 use EscolaLms\Courses\Models\Lesson;
 use EscolaLms\Courses\Models\Topic;
@@ -11,6 +12,7 @@ use EscolaLms\CoursesImportExport\Enums\CoursesImportExportPermissionsEnum;
 use EscolaLms\CoursesImportExport\Http\Resources\CourseExportResource;
 use EscolaLms\CoursesImportExport\Models\Course;
 use EscolaLms\CoursesImportExport\Tests\TestCase;
+use EscolaLms\Tags\Models\Tag;
 use EscolaLms\TopicTypes\Models\Contracts\TopicFileContentContract;
 use EscolaLms\TopicTypes\Models\TopicContent\Audio;
 use EscolaLms\TopicTypes\Models\TopicContent\Image;
@@ -68,9 +70,13 @@ class CourseImportApiTest extends TestCase
         UploadedFile::fake()->image('dummy.jpg')->storeAs($this->dirPath, 'topic/4/resources/dummy.jpg');
         UploadedFile::fake()->image('dummy.jpg')->storeAs($this->dirPath, 'topic/4/resources/dummy2.jpg');
 
-        $course = Course::factory()->create([
+        $course = Course::factory()
+            ->has(Category::factory()->count(3))
+            ->has(Tag::factory()->count(2))
+            ->create([
             'author_id' => $this->user->getKey(),
         ]);
+
         $course->update([
             'image_path' => 'course_image.jpg',
             'video_path' => 'dummy.mp4',
@@ -202,6 +208,9 @@ class CourseImportApiTest extends TestCase
                 Storage::assertExists($resource->path);
             }
         }
+
+        $this->assertCount(3, $responseData->categories);
+        $this->assertCount(2, $responseData->tags);
     }
 
     public function testErrorImportCourseFromZip(): void

@@ -2,6 +2,7 @@
 
 namespace EscolaLms\CoursesImportExport\Services;
 
+use EscolaLms\Categories\Repositories\Contracts\CategoriesRepositoryContract;
 use EscolaLms\Courses\Http\Requests\CreateTopicAPIRequest;
 use EscolaLms\Courses\Models\Lesson;
 use EscolaLms\Courses\Models\Topic;
@@ -14,9 +15,11 @@ use EscolaLms\CoursesImportExport\Models\Course;
 use EscolaLms\CoursesImportExport\Services\Contracts\ExportImportServiceContract;
 use EscolaLms\CoursesImportExport\Strategies\Contract\TopicImportStrategy;
 use EscolaLms\CoursesImportExport\Strategies\ScormScoTopicTypeStrategy;
+use EscolaLms\Tags\Repository\Contracts\TagRepositoryContract;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
@@ -31,6 +34,8 @@ class ExportImportService implements ExportImportServiceContract
     private LessonRepositoryContract $lessonRepository;
     private TopicRepositoryContract $topicRepository;
     private TopicResourceRepositoryContract $topicResourceRepo;
+    private CategoriesRepositoryContract $categoriesRepository;
+    private TagRepositoryContract $tagRepository;
 
     private array $topicTypes = [
         'EscolaLms\\TopicTypes\\Models\\TopicContent\\ScormSco',
@@ -41,12 +46,16 @@ class ExportImportService implements ExportImportServiceContract
         CourseRepositoryContract $courseRepository,
         LessonRepositoryContract $lessonRepository,
         TopicRepositoryContract $topicRepository,
-        TopicResourceRepositoryContract $topicResourceRepository
+        TopicResourceRepositoryContract $topicResourceRepository,
+        CategoriesRepositoryContract $categoriesRepository,
+        TagRepositoryContract $tagRepository
     ) {
         $this->courseRepository = $courseRepository;
         $this->lessonRepository = $lessonRepository;
         $this->topicRepository = $topicRepository;
         $this->topicResourceRepo = $topicResourceRepository;
+        $this->categoriesRepository = $categoriesRepository;
+        $this->tagRepository = $tagRepository;
     }
 
     private function fixAllPathsBeforeZipping(int $courseId): void
@@ -105,9 +114,8 @@ class ExportImportService implements ExportImportServiceContract
         $this->fixAllPathsBeforeZipping($courseId);
         $dirName = $this->copyCourseFilesToExportFolder($courseId);
 
-        // $course = $this->courseRepository->findWith($courseId, ['*'], ['lessons.topics.topicable', 'scormSco']);
-
-        $course = Course::with(['lessons.topics.topicable', 'scormSco'])->findOrFail($courseId);
+        $course = \EscolaLms\Courses\Models\Course::with(['lessons.topics.topicable', 'scormSco', 'categories', 'tags'])
+            ->findOrFail($courseId);
         $this->createExportJson($course, $dirName);
 
         return $this->createZipFromFolder($dirName);
@@ -144,6 +152,27 @@ class ExportImportService implements ExportImportServiceContract
         return $dirFullPath;
     }
 
+    private function createCategories(array $categories): array {
+        $ids = [];
+        foreach ($categories as $category) {
+            $model = $this->createCategory($category);
+            $ids[] = $model->getKey();
+        }
+
+        return Arr::flatten($ids);
+    }
+
+    private function createCategory(array $category): Model {
+        if ($category['parent']) {
+            $parent = $this->createCategory($category['parent']);
+            $category['parent_id'] = $parent->getKey();
+        }
+
+        unset($category['parent']);
+        $this->categoriesRepository->create($category);
+        return $this->categoriesRepository->create($category);
+    }
+
     private function createCourseFromImport(array $courseData, string $dirFullPath): Model
     {
         unset($courseData['author_id']);
@@ -157,6 +186,20 @@ class ExportImportService implements ExportImportServiceContract
 
         $courseValidator = Validator::make($courseData, Course::$rules);
         $course = $this->courseRepository->create($courseValidator->validate());
+
+        // create categories
+        if (isset($courseData['categories'])) {
+            $categoryIds = $this->createCategories($courseData['categories']);
+            $course->categories()->sync($categoryIds);
+        }
+
+        // create tags
+        if (isset($courseData['tags'])) {
+            $tags = array_map(function ($tag) {
+                return ['title' => $tag['title']];
+            }, $courseData['tags']);
+            $course->tags()->createMany($tags);
+        }
 
         if (isset($courseData['lessons']) && is_array($courseData['lessons'])) {
             foreach ($courseData['lessons'] as $lesson) {

@@ -48,6 +48,37 @@ class Course extends BaseCourse
         return $destination ? [$destination] : [];
     }
 
+    public function fixCategoriesAssetPath(): array
+    {
+        if (!$this->categories) {
+            return [];
+        }
+
+        $categories = $this->categories;
+
+        $destinations = [];
+        foreach ($categories as $category) {
+            $destinations[] = $this->fixCategoryPath($category);
+        }
+
+        return $destinations;
+    }
+
+    public function fixCategoryPath(\EscolaLms\Categories\Models\Category $category): string
+    {
+        if ($category->parent) {
+            return $this->fixCategoryPath($category->parent);
+        }
+
+        $destination = sprintf('courses/%d/%s', $this->id, $category->icon);
+        if (!Storage::exists($destination)) {
+            Storage::copy($category->icon, $destination);
+        }
+
+        return $destination;
+    }
+
+
     public function fixAssetPaths(): array
     {
         $results = [];
@@ -55,6 +86,7 @@ class Course extends BaseCourse
         $results = $results + $this->fixPath('video_path');
         $results = $results + $this->fixPath('poster_path');
         $results = $results + $this->fixScormAssetPath();
+        $results = $results + $this->fixCategoriesAssetPath();
 
         foreach ($this->lessons as $lesson) {
             foreach ($lesson->topics as $topic) {
