@@ -2,6 +2,7 @@
 
 namespace EscolaLms\CoursesImportExport\Models;
 
+use EscolaLms\Categories\Models\Category;
 use EscolaLms\Courses\Models\Course as BaseCourse;
 use EscolaLms\CoursesImportExport\Enums\CoursesImportExportEnum;
 use EscolaLms\Scorm\Services\Contracts\ScormServiceContract;
@@ -64,7 +65,7 @@ class Course extends BaseCourse
         return $destinations;
     }
 
-    public function fixCategoryPath(\EscolaLms\Categories\Models\Category $category): string
+    public function fixCategoryPath(Category $category): string
     {
         if ($category->parent) {
             return $this->fixCategoryPath($category->parent);

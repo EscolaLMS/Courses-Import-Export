@@ -2,6 +2,7 @@
 
 namespace EscolaLms\CoursesImportExport\Services;
 
+use EscolaLms\Categories\Models\Category;
 use EscolaLms\Categories\Repositories\Contracts\CategoriesRepositoryContract;
 use EscolaLms\Courses\Http\Requests\CreateTopicAPIRequest;
 use EscolaLms\Courses\Models\Lesson;
@@ -37,6 +38,8 @@ class ExportImportService implements ExportImportServiceContract
     private CategoriesRepositoryContract $categoriesRepository;
     private TagRepositoryContract $tagRepository;
 
+    private string $dirFullPath;
+
     private array $topicTypes = [
         'EscolaLms\\TopicTypes\\Models\\TopicContent\\ScormSco',
         'EscolaLms\\TopicTypes\\Models\\TopicContent\\H5P',
@@ -64,7 +67,7 @@ class ExportImportService implements ExportImportServiceContract
         $course->fixAssetPaths();
     }
 
-    private function createExportJson(Course $course, $dirName): void
+    private function createExportJson(\EscolaLms\Courses\Models\Course $course, $dirName): void
     {
         $program = CourseExportResource::make($course);
 
@@ -124,7 +127,7 @@ class ExportImportService implements ExportImportServiceContract
     public function import(UploadedFile $zipFile): Model
     {
         $dirPath = 'imports' . DIRECTORY_SEPARATOR . 'courses' . DIRECTORY_SEPARATOR . uniqid(rand(), true);
-        $dirFullPath = $this->extractZipFile($zipFile, $dirPath);
+        $dirFullPath = $this->dirFullPath = $this->extractZipFile($zipFile, $dirPath);
         try {
             $content = json_decode(File::get($dirFullPath . DIRECTORY_SEPARATOR . 'content.json'), true);
             $course = DB::transaction(function () use ($content, $dirFullPath) {
@@ -163,13 +166,22 @@ class ExportImportService implements ExportImportServiceContract
     }
 
     private function createCategory(array $category): Model {
+        $foundCategory = Category::whereSlug($category['slug'])->first();
+        if ($foundCategory) {
+            return $foundCategory;
+        }
+
+        $filePath = $this->dirFullPath . DIRECTORY_SEPARATOR . $category['icon'];
+        if (File::exists($filePath)) {
+            $category['icon'] = Storage::putFile('categories', $filePath, 'public');
+        }
+
         if ($category['parent']) {
             $parent = $this->createCategory($category['parent']);
             $category['parent_id'] = $parent->getKey();
         }
 
         unset($category['parent']);
-        $this->categoriesRepository->create($category);
         return $this->categoriesRepository->create($category);
     }
 

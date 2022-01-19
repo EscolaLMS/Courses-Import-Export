@@ -22,7 +22,6 @@ use EscolaLms\TopicTypes\Models\TopicContent\Video;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use ZanySoft\Zip\Zip;
 
@@ -69,9 +68,14 @@ class CourseImportApiTest extends TestCase
         UploadedFile::fake()->image('dummy.jpg')->storeAs($this->dirPath, 'topic/4/dummy.jpg');
         UploadedFile::fake()->image('dummy.jpg')->storeAs($this->dirPath, 'topic/4/resources/dummy.jpg');
         UploadedFile::fake()->image('dummy.jpg')->storeAs($this->dirPath, 'topic/4/resources/dummy2.jpg');
+        UploadedFile::fake()->image('icon.png')->storeAs($this->dirPath, 'categories/icon.png');
 
         $course = Course::factory()
-            ->has(Category::factory()->count(3))
+            ->has(
+                Category::factory()
+                    ->count(1)
+                    ->state(fn () => ['parent_id' => null])
+            )
             ->has(Tag::factory()->count(2))
             ->create([
             'author_id' => $this->user->getKey(),
@@ -142,7 +146,16 @@ class CourseImportApiTest extends TestCase
 
         $this->course = $course;
         $courseResource = CourseExportResource::make($course);
-        $this->content = json_encode($courseResource);
+        $content = json_decode($courseResource->toJson(), true);
+        $content['categories'][] = [
+            'name' => $this->faker->name,
+            'slug' => $this->faker->slug . $this->faker->numberBetween(),
+            'is_active' => false,
+            'parent' => null,
+            'icon' => 'categories/icon.png',
+            'icon_class' => null
+        ];
+        $this->content = json_encode($content);
 
         Storage::put($this->dirPath . 'content.json', $this->content);
         $zip = Zip::create(Storage::path($this->dirPath . 'course-import.zip'));
@@ -209,8 +222,13 @@ class CourseImportApiTest extends TestCase
             }
         }
 
-        $this->assertCount(3, $responseData->categories);
+        $this->assertCount(2, $responseData->categories);
         $this->assertCount(2, $responseData->tags);
+
+        $categories = Course::find($responseData->id)->categories;
+        foreach ($categories as $category) {
+            Storage::assertExists($category->icon);
+        }
     }
 
     public function testErrorImportCourseFromZip(): void
