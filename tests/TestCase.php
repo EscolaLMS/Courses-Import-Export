@@ -9,6 +9,7 @@ use EscolaLms\Courses\AuthServiceProvider;
 use EscolaLms\Courses\EscolaLmsCourseServiceProvider;
 use EscolaLms\Courses\Tests\Models\User as UserTest;
 use EscolaLms\CoursesImportExport\EscolaLmsCoursesImportExportServiceProvider;
+use EscolaLms\HeadlessH5P\HeadlessH5PServiceProvider;
 use EscolaLms\Scorm\EscolaLmsScormServiceProvider;
 use EscolaLms\Tags\EscolaLmsTagsServiceProvider;
 use EscolaLms\TopicTypes\EscolaLmsTopicTypesServiceProvider;
@@ -42,6 +43,7 @@ class TestCase extends \EscolaLms\Core\Tests\TestCase
             EscolaLmsCoursesImportExportServiceProvider::class,
             EscolaLmsSettingsServiceProvider::class,
             EscolaLmsTopicTypesServiceProvider::class,
+            HeadlessH5PServiceProvider::class
         ];
     }
 

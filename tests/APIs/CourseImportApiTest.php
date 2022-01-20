@@ -2,6 +2,7 @@
 
 namespace Tests\APIs;
 
+use EscolaLms\Categories\Models\Category;
 use EscolaLms\Core\Tests\CreatesUsers;
 use EscolaLms\Courses\Models\Lesson;
 use EscolaLms\Courses\Models\Topic;
@@ -11,6 +12,7 @@ use EscolaLms\CoursesImportExport\Enums\CoursesImportExportPermissionsEnum;
 use EscolaLms\CoursesImportExport\Http\Resources\CourseExportResource;
 use EscolaLms\CoursesImportExport\Models\Course;
 use EscolaLms\CoursesImportExport\Tests\TestCase;
+use EscolaLms\Tags\Models\Tag;
 use EscolaLms\TopicTypes\Models\Contracts\TopicFileContentContract;
 use EscolaLms\TopicTypes\Models\TopicContent\Audio;
 use EscolaLms\TopicTypes\Models\TopicContent\Image;
@@ -20,7 +22,6 @@ use EscolaLms\TopicTypes\Models\TopicContent\Video;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use ZanySoft\Zip\Zip;
 
@@ -67,10 +68,19 @@ class CourseImportApiTest extends TestCase
         UploadedFile::fake()->image('dummy.jpg')->storeAs($this->dirPath, 'topic/4/dummy.jpg');
         UploadedFile::fake()->image('dummy.jpg')->storeAs($this->dirPath, 'topic/4/resources/dummy.jpg');
         UploadedFile::fake()->image('dummy.jpg')->storeAs($this->dirPath, 'topic/4/resources/dummy2.jpg');
+        UploadedFile::fake()->image('icon.png')->storeAs($this->dirPath, 'categories/icon.png');
 
-        $course = Course::factory()->create([
+        $course = Course::factory()
+            ->has(
+                Category::factory()
+                    ->count(1)
+                    ->state(fn () => ['parent_id' => null])
+            )
+            ->has(Tag::factory()->count(2))
+            ->create([
             'author_id' => $this->user->getKey(),
         ]);
+
         $course->update([
             'image_path' => 'course_image.jpg',
             'video_path' => 'dummy.mp4',
@@ -136,7 +146,16 @@ class CourseImportApiTest extends TestCase
 
         $this->course = $course;
         $courseResource = CourseExportResource::make($course);
-        $this->content = json_encode($courseResource);
+        $content = json_decode($courseResource->toJson(), true);
+        $content['categories'][] = [
+            'name' => $this->faker->name,
+            'slug' => $this->faker->slug . $this->faker->numberBetween(),
+            'is_active' => false,
+            'parent' => null,
+            'icon' => 'categories/icon.png',
+            'icon_class' => null
+        ];
+        $this->content = json_encode($content);
 
         Storage::put($this->dirPath . 'content.json', $this->content);
         $zip = Zip::create(Storage::path($this->dirPath . 'course-import.zip'));
@@ -202,6 +221,14 @@ class CourseImportApiTest extends TestCase
                 Storage::assertExists($resource->path);
             }
         }
+
+        $this->assertCount(2, $responseData->categories);
+        $this->assertCount(2, $responseData->tags);
+
+        $categories = Course::find($responseData->id)->categories;
+        foreach ($categories as $category) {
+            Storage::assertExists($category->icon);
+        }
     }
 
     public function testErrorImportCourseFromZip(): void
@@ -218,5 +245,63 @@ class CourseImportApiTest extends TestCase
         ]);
 
         $response->assertStatus(400);
+    }
+
+    public function testImportCourseWithScormScoAndH5P(): void
+    {
+        $admin = $this->makeAdmin();
+
+        $courseZip = new UploadedFile(realpath(
+            __DIR__ . '/../mocks/course.zip'), 'course.zip', null, null, true
+        );
+
+        $response = $this->actingAs($admin, 'api')->postJson('/api/admin/courses/zip/import', [
+            'file' => $courseZip
+        ])->assertCreated();
+
+        $data = $response->getData()->data;
+
+        $lesson = $data->lessons[0];
+        $topic = $lesson->topics[0];
+        $topicableSco = current(array_filter($lesson->topics, fn($item) => $item->topicable_type === 'EscolaLms\TopicTypes\Models\TopicContent\ScormSco'));
+        $topicableH5P = current(array_filter($lesson->topics, fn($item) => $item->topicable_type === 'EscolaLms\TopicTypes\Models\TopicContent\H5P'));
+
+        $this->assertDatabaseHas('courses', [
+            'id' => $data->id,
+            'title' => $data->title,
+            'author_id' => $admin->getKey(),
+            'scorm_sco_id' => $data->scorm_sco_id
+        ]);
+        $this->assertDatabaseHas('lessons', [
+            'id' => $lesson->id,
+            'title' => $lesson->title,
+            'course_id' => $data->id,
+        ]);
+        $this->assertDatabaseHas('topics', [
+            'id' => $topic->id,
+            'title' => $topic->title,
+            'lesson_id' => $topic->lesson_id,
+        ]);
+        $this->assertDatabaseHas('topic_scorm_scos', [
+            'id' => $topicableSco->topicable_id,
+            'value' => $topicableSco->topicable->value
+        ]);
+        $this->assertDatabaseHas('topic_h5ps', [
+            'id' => $topicableH5P->topicable_id,
+            'value' => $topicableH5P->topicable->value
+        ]);
+        $this->assertDatabaseHas('topic_h5ps', [
+            'id' => $topicableH5P->topicable_id,
+            'value' => $topicableH5P->topicable->value
+        ]);
+        $this->assertDatabaseHas('hh5p_contents', [
+            'id' => $topicableH5P->topicable->value
+        ]);
+        $this->assertDatabaseHas('scorm_sco', [
+            'id' => $topicableSco->topicable->value
+        ]);
+
+        $this->assertEquals(1, count($data->lessons));
+        $this->assertEquals(3, count($data->lessons[0]->topics));
     }
 }

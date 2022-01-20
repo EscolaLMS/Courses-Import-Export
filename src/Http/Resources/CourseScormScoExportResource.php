@@ -2,6 +2,7 @@
 
 namespace EscolaLms\CoursesImportExport\Http\Resources;
 
+use EscolaLms\CoursesImportExport\Enums\CoursesImportExportEnum;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -16,12 +17,12 @@ class CourseScormScoExportResource extends JsonResource
      */
     public function toArray($request): array
     {
+        $scormSco = $this->scormSco;
         return [
-            'id' => $this->getKey(),
-            'uuid' => $this->uuid,
-            'identifier' => $this->identifier,
-            'entry_url' => $this->entry_url,
-            'title' => $this->title,
+            'id' => $scormSco->getKey(),
+            'uuid' => $scormSco ? $scormSco->uuid : null,
+            'identifier' => $scormSco ? $scormSco->identifier : null,
+            'scorm_file' => CoursesImportExportEnum::SCORM_FILE,
         ];
     }
 }
