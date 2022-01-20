@@ -20,8 +20,8 @@ class CourseScormScoExportResource extends JsonResource
         $scormSco = $this->scormSco;
         return [
             'id' => $scormSco->getKey(),
-            'uuid' => $scormSco->uuid,
-            'identifier' => $scormSco->identifier,
+            'uuid' => $scormSco ? $scormSco->uuid : null,
+            'identifier' => $scormSco ? $scormSco->identifier : null,
             'scorm_file' => CoursesImportExportEnum::SCORM_FILE,
         ];
     }

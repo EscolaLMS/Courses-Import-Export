@@ -16,7 +16,6 @@ use EscolaLms\CoursesImportExport\Models\Course;
 use EscolaLms\CoursesImportExport\Services\Contracts\ExportImportServiceContract;
 use EscolaLms\CoursesImportExport\Strategies\Contract\TopicImportStrategy;
 use EscolaLms\CoursesImportExport\Strategies\ScormScoTopicTypeStrategy;
-use EscolaLms\Tags\Repository\Contracts\TagRepositoryContract;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\UploadedFile;
@@ -36,7 +35,6 @@ class ExportImportService implements ExportImportServiceContract
     private TopicRepositoryContract $topicRepository;
     private TopicResourceRepositoryContract $topicResourceRepo;
     private CategoriesRepositoryContract $categoriesRepository;
-    private TagRepositoryContract $tagRepository;
 
     private string $dirFullPath;
 
@@ -50,15 +48,13 @@ class ExportImportService implements ExportImportServiceContract
         LessonRepositoryContract $lessonRepository,
         TopicRepositoryContract $topicRepository,
         TopicResourceRepositoryContract $topicResourceRepository,
-        CategoriesRepositoryContract $categoriesRepository,
-        TagRepositoryContract $tagRepository
+        CategoriesRepositoryContract $categoriesRepository
     ) {
         $this->courseRepository = $courseRepository;
         $this->lessonRepository = $lessonRepository;
         $this->topicRepository = $topicRepository;
         $this->topicResourceRepo = $topicResourceRepository;
         $this->categoriesRepository = $categoriesRepository;
-        $this->tagRepository = $tagRepository;
     }
 
     private function fixAllPathsBeforeZipping(int $courseId): void
