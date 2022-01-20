@@ -140,7 +140,7 @@ class ExportImportService implements ExportImportServiceContract
             Storage::deleteDirectory($dirPath);
         }
 
-        return $course;
+        return $course->load('categories', 'tags', 'lessons', 'lessons.topics', 'lessons.topics.topicable');
     }
 
     private function extractZipFile(UploadedFile $zipFile, string $dirPath): string

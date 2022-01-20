@@ -252,7 +252,7 @@ class CourseImportApiTest extends TestCase
         $admin = $this->makeAdmin();
 
         $courseZip = new UploadedFile(realpath(
-            __DIR__ . '/../mocks/course_sco.zip'), 'course.zip', null, null, true
+            __DIR__ . '/../mocks/course.zip'), 'course.zip', null, null, true
         );
 
         $response = $this->actingAs($admin, 'api')->postJson('/api/admin/courses/zip/import', [
@@ -260,8 +260,11 @@ class CourseImportApiTest extends TestCase
         ])->assertCreated();
 
         $data = $response->getData()->data;
+
         $lesson = $data->lessons[0];
         $topic = $lesson->topics[0];
+        $topicableSco = current(array_filter($lesson->topics, fn($item) => $item->topicable_type === 'EscolaLms\TopicTypes\Models\TopicContent\ScormSco'));
+        $topicableH5P = current(array_filter($lesson->topics, fn($item) => $item->topicable_type === 'EscolaLms\TopicTypes\Models\TopicContent\H5P'));
 
         $this->assertDatabaseHas('courses', [
             'id' => $data->id,
@@ -279,8 +282,16 @@ class CourseImportApiTest extends TestCase
             'title' => $topic->title,
             'lesson_id' => $topic->lesson_id,
         ]);
+        $this->assertDatabaseHas('topic_scorm_scos', [
+            'id' => $topicableSco->topicable_id,
+            'value' => $topicableSco->topicable->value
+        ]);
+        $this->assertDatabaseHas('topic_h5ps', [
+            'id' => $topicableH5P->topicable_id,
+            'value' => $topicableH5P->topicable->value
+        ]);
 
-        $this->assertEquals(3, count($data->lessons));
-        $this->assertEquals(7, count($data->lessons[0]->topics));
+        $this->assertEquals(1, count($data->lessons));
+        $this->assertEquals(3, count($data->lessons[0]->topics));
     }
 }
