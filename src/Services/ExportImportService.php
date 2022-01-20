@@ -151,7 +151,8 @@ class ExportImportService implements ExportImportServiceContract
         return $dirFullPath;
     }
 
-    private function createCategories(array $categories): array {
+    private function createCategories(array $categories): array
+    {
         $ids = [];
         foreach ($categories as $category) {
             $model = $this->createCategory($category);
@@ -161,7 +162,8 @@ class ExportImportService implements ExportImportServiceContract
         return Arr::flatten($ids);
     }
 
-    private function createCategory(array $category): Model {
+    private function createCategory(array $category): Model
+    {
         $foundCategory = Category::whereSlug($category['slug'])->first();
         if ($foundCategory) {
             return $foundCategory;

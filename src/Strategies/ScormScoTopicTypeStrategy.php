@@ -16,7 +16,7 @@ class ScormScoTopicTypeStrategy implements TopicImportStrategy
         $this->scormService = app(ScormServiceContract::class);
     }
 
-    function make(string $path, array $data): ?int
+    public function make(string $path, array $data): ?int
     {
         if (!$data['identifier'] || !$data['scorm_file']) {
             return null;

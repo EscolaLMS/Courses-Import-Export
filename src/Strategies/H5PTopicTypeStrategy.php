@@ -7,7 +7,6 @@ use EscolaLms\HeadlessH5P\Repositories\Contracts\H5PContentRepositoryContract;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
 
-
 class H5PTopicTypeStrategy implements TopicImportStrategy
 {
     private H5PContentRepositoryContract $h5PContentRepository;
@@ -17,7 +16,7 @@ class H5PTopicTypeStrategy implements TopicImportStrategy
         $this->h5PContentRepository = app(H5PContentRepositoryContract::class);
     }
 
-    function make(string $path, array $data): ?int
+    public function make(string $path, array $data): ?int
     {
         $filePath = $path . DIRECTORY_SEPARATOR . $data['h5p_file'];
         if (!File::exists($filePath)) {
