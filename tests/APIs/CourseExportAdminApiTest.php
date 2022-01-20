@@ -2,12 +2,14 @@
 
 namespace Tests\APIs;
 
+use EscolaLms\Categories\Models\Category;
 use EscolaLms\Core\Tests\CreatesUsers;
 use EscolaLms\Courses\Models\Course;
 use EscolaLms\Courses\Models\Lesson;
 use EscolaLms\Courses\Models\Topic;
 use EscolaLms\CoursesImportExport\Database\Seeders\CoursesExportImportPermissionSeeder;
 use EscolaLms\CoursesImportExport\Tests\TestCase;
+use EscolaLms\Tags\Models\Tag;
 use EscolaLms\TopicTypes\Models\TopicContent\Audio;
 use EscolaLms\TopicTypes\Models\TopicContent\Image;
 use EscolaLms\TopicTypes\Models\TopicContent\PDF;
@@ -33,16 +35,22 @@ class CourseExportAdminApiTest extends TestCase
 
         Storage::fake(config('filesystems.default'));
 
-        Storage::fake(config('filesystems.default'));
         Storage::put('dummy.mp4', 'Some dummy data');
         Storage::put('dummy.mp3', 'Some dummy data');
         Storage::put('dummy.jpg', 'Some dummy data');
         Storage::put('dummy.png', 'Some dummy data');
         Storage::put('dummy.pdf', 'Some dummy data');
 
-        $course = Course::factory()->create([
-            'author_id' => $this->user->id,
-        ]);
+        $course = Course::factory()
+            ->has(
+                Category::factory()
+                    ->count(1)
+                    ->state(fn () => ['parent_id' => null])
+            )
+            ->has(Tag::factory()->count(2))
+            ->create([
+                'author_id' => $this->user->id,
+            ]);
         $lesson = Lesson::factory()->create([
             'course_id' => $course->id,
         ]);
@@ -90,7 +98,7 @@ class CourseExportAdminApiTest extends TestCase
 
         $this->response = $this->actingAs($this->user, 'api')->json(
             'GET',
-            '/api/admin/courses/'.$id.'/export/'
+            '/api/admin/courses/' . $id . '/export/'
         );
 
         $this->response->assertOk();

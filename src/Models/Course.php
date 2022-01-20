@@ -2,7 +2,11 @@
 
 namespace EscolaLms\CoursesImportExport\Models;
 
+use EscolaLms\Categories\Models\Category;
 use EscolaLms\Courses\Models\Course as BaseCourse;
+use EscolaLms\CoursesImportExport\Enums\CoursesImportExportEnum;
+use EscolaLms\Scorm\Services\Contracts\ScormServiceContract;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 
 class Course extends BaseCourse
@@ -26,12 +30,64 @@ class Course extends BaseCourse
         return [];
     }
 
+    public function fixScormAssetPath(): array
+    {
+        if (!$this->scormSco) {
+            return [];
+        }
+
+        $scorm = $this->scormSco->scorm;
+        $destination = sprintf('courses/%d/%s', $this->id, basename(CoursesImportExportEnum::SCORM_FILE));
+
+        $scormService = app(ScormServiceContract::class);
+        $scormZipPath = $scormService->zipScorm($scorm->getKey());
+
+        if (!Storage::exists($destination)) {
+            Storage::move($scormZipPath, $destination);
+        }
+
+        return $destination ? [$destination] : [];
+    }
+
+    public function fixCategoriesAssetPath(): array
+    {
+        if (!$this->categories) {
+            return [];
+        }
+
+        $categories = $this->categories;
+
+        $destinations = [];
+        foreach ($categories as $category) {
+            $destinations[] = $this->fixCategoryPath($category);
+        }
+
+        return $destinations;
+    }
+
+    public function fixCategoryPath(Category $category): string
+    {
+        if ($category->parent) {
+            return $this->fixCategoryPath($category->parent);
+        }
+
+        $destination = sprintf('courses/%d/%s', $this->id, $category->icon);
+        if (!Storage::exists($destination)) {
+            Storage::copy($category->icon, $destination);
+        }
+
+        return $destination;
+    }
+
+
     public function fixAssetPaths(): array
     {
         $results = [];
-        $results = $results + $this->fixPath('image');
-        $results = $results + $this->fixPath('video');
-        $results = $results + $this->fixPath('poster');
+        $results = $results + $this->fixPath('image_path');
+        $results = $results + $this->fixPath('video_path');
+        $results = $results + $this->fixPath('poster_path');
+        $results = $results + $this->fixScormAssetPath();
+        $results = $results + $this->fixCategoriesAssetPath();
 
         foreach ($this->lessons as $lesson) {
             foreach ($lesson->topics as $topic) {
