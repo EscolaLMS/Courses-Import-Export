@@ -269,8 +269,11 @@ class CourseImportApiTest extends TestCase
         $this->assertDatabaseHas('courses', [
             'id' => $data->id,
             'title' => $data->title,
+            'scorm_sco_id' => $data->scorm_sco_id,
+        ]);
+        $this->assertDatabaseHas('course_author', [
+            'course_id' => $data->id,
             'author_id' => $admin->getKey(),
-            'scorm_sco_id' => $data->scorm_sco_id
         ]);
         $this->assertDatabaseHas('lessons', [
             'id' => $lesson->id,
