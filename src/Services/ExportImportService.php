@@ -194,7 +194,7 @@ class ExportImportService implements ExportImportServiceContract
             $courseData['scorm_sco_id'] = $strategy->make($dirFullPath, $courseData['scorm_sco']);
         }
 
-        $courseValidator = Validator::make($courseData, Course::$rules);
+        $courseValidator = Validator::make($courseData, Course::rules());
         $course = $this->courseRepository->create($courseValidator->validate());
 
         // create categories
