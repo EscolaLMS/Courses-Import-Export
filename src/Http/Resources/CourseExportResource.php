@@ -44,7 +44,7 @@ class CourseExportResource extends JsonResource
             'base_price' => $course->base_price,
             'duration' => $course->duration,
             'scorm_sco' => $this->when($course->scorm_sco_id !== null, fn () => CourseScormScoExportResource::make($course)),
-            'active' => $course->active,
+            'status' => $course->status,
             'subtitle' => $course->subtitle,
             'language' => $course->language,
             'description' => $course->description,
