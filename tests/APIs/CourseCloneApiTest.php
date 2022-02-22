@@ -8,6 +8,7 @@ use EscolaLms\Courses\Models\Course;
 use EscolaLms\Courses\Models\Lesson;
 use EscolaLms\Courses\Models\Topic;
 use EscolaLms\CoursesImportExport\Database\Seeders\CoursesExportImportPermissionSeeder;
+use EscolaLms\CoursesImportExport\Jobs\CloneCourse;
 use EscolaLms\CoursesImportExport\Tests\TestCase;
 use EscolaLms\Tags\Models\Tag;
 use EscolaLms\TopicTypes\Models\TopicContent\Audio;
@@ -15,26 +16,20 @@ use EscolaLms\TopicTypes\Models\TopicContent\Image;
 use EscolaLms\TopicTypes\Models\TopicContent\PDF;
 use EscolaLms\TopicTypes\Models\TopicContent\Video;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 
-class CourseExportAdminApiTest extends TestCase
+class CourseCloneApiTest extends TestCase
 {
-    use CreatesUsers;
-    use DatabaseTransactions;
+    use CreatesUsers,DatabaseTransactions, WithFaker;
 
-    /**
-     * @test
-     */
     protected function setUp(): void
     {
         parent::setUp();
         $this->seed(CoursesExportImportPermissionSeeder::class);
-        $this->user = config('auth.providers.users.model')::factory()->create();
-        $this->user->guard_name = 'api';
-        $this->user->assignRole('admin');
 
         Storage::fake(config('filesystems.default'));
-
         Storage::put('dummy.mp4', 'Some dummy data');
         Storage::put('dummy.mp3', 'Some dummy data');
         Storage::put('dummy.jpg', 'Some dummy data');
@@ -49,7 +44,7 @@ class CourseExportAdminApiTest extends TestCase
             )
             ->has(Tag::factory()->count(2))
             ->create([
-                'author_id' => $this->user->id,
+                'author_id' => $this->makeAdmin()->id,
             ]);
         $lesson = Lesson::factory()->create([
             'course_id' => $course->id,
@@ -89,26 +84,23 @@ class CourseExportAdminApiTest extends TestCase
         $this->course = $course;
     }
 
-    /**
-     * @test
-     */
-    public function testExportiCreated()
+    public function testCloneCourse()
     {
-        $id = $this->course->id;
+        Queue::fake();
+        $admin = $this->makeAdmin();
 
-        $this->response = $this->actingAs($this->user, 'api')->json(
-            'GET',
-            '/api/admin/courses/' . $id . '/export/'
-        );
+        $this->actingAs($admin, 'api')
+            ->json('GET', '/api/admin/courses/' . $this->course->getKey() . '/clone')
+            ->assertOk();
 
-        $this->response->assertOk();
+        Queue::assertPushed(CloneCourse::class);
+    }
 
-        $data = $this->response->getData();
-
-        $filename = basename($data->data);
-
-        $filepath = sprintf('exports/courses/%d/%s', $id, $filename);
-
-        Storage::assertExists($filepath);
+    public function testCloneNonExistentCourse()
+    {
+        $admin = $this->makeAdmin();
+        $this->actingAs($admin, 'api')
+            ->json('GET', '/api/admin/courses/-1/clone')
+            ->assertNotFound();
     }
 }

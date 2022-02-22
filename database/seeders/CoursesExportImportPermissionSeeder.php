@@ -18,11 +18,13 @@ class CoursesExportImportPermissionSeeder extends Seeder
         Permission::findOrCreate(CoursesImportExportPermissionsEnum::COURSES_EXPORT, 'api');
         Permission::findOrCreate(CoursesImportExportPermissionsEnum::COURSES_IMPORT, 'api');
         Permission::findOrCreate(CoursesImportExportPermissionsEnum::COURSES_EXPORT_OWNED, 'api');
+        Permission::findOrCreate(CoursesImportExportPermissionsEnum::COURSES_CLONE, 'api');
 
         $admin->givePermissionTo([
             CoursesImportExportPermissionsEnum::COURSES_EXPORT,
             CoursesImportExportPermissionsEnum::COURSES_IMPORT,
             CoursesImportExportPermissionsEnum::COURSES_EXPORT_OWNED,
+            CoursesImportExportPermissionsEnum::COURSES_CLONE,
         ]);
     }
 }

@@ -7,7 +7,7 @@ use Illuminate\Http\UploadedFile;
 
 interface ExportImportServiceContract
 {
-    public function export(int $courseId): string;
+    public function export($courseId, bool $withUrl = true): string;
 
     public function import(UploadedFile $file): Model;
 }

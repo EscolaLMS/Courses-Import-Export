@@ -94,7 +94,7 @@ class ExportImportService implements ExportImportServiceContract
         return $dirName;
     }
 
-    private function createZipFromFolder($dirName): string
+    private function createZipFromFolder($dirName, bool $withUrl = true): string
     {
         $filename = uniqid(rand(), true).'.zip';
 
@@ -105,10 +105,20 @@ class ExportImportService implements ExportImportServiceContract
 
         Storage::deleteDirectory($dirName.'/content');
 
-        return Storage::url($dirName.'/'.$filename);
+        return $withUrl ? $this->getExportUrl($dirPath, $filename) : $this->getExportDir($dirPath, $filename);
     }
 
-    public function export($courseId): string
+    private function getExportUrl(string $dirName, string $fileName): string
+    {
+        return Storage::url($dirName. DIRECTORY_SEPARATOR . $fileName);
+    }
+
+    private function getExportDir(string $dirName, string $fileName): string
+    {
+        return $dirName. DIRECTORY_SEPARATOR . $fileName;
+    }
+
+    public function export($courseId, bool $withUrl = true): string
     {
         $this->fixAllPathsBeforeZipping($courseId);
         $dirName = $this->copyCourseFilesToExportFolder($courseId);
@@ -117,7 +127,7 @@ class ExportImportService implements ExportImportServiceContract
             ->findOrFail($courseId);
         $this->createExportJson($course, $dirName);
 
-        return $this->createZipFromFolder($dirName);
+        return $this->createZipFromFolder($dirName, $withUrl);
     }
 
     public function import(UploadedFile $zipFile): Model

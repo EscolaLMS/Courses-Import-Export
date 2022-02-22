@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\APIs;
+namespace EscolaLms\CoursesImportExport\Tests\APIs;
 
 use EscolaLms\Categories\Models\Category;
 use EscolaLms\Core\Tests\CreatesUsers;

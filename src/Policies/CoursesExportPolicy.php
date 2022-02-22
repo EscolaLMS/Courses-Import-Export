@@ -45,4 +45,17 @@ class CoursesExportPolicy
 
         return false;
     }
+
+    public function clone(User $user): bool
+    {
+        if ($user->hasRole('admin')) {
+            return true;
+        }
+
+        if ($user->can(CoursesImportExportPermissionsEnum::COURSES_CLONE)) {
+            return true;
+        }
+
+        return false;
+    }
 }

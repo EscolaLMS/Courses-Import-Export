@@ -5,8 +5,10 @@ namespace EscolaLms\CoursesImportExport\Http\Controllers;
 use EscolaLms\Core\Http\Controllers\EscolaLmsBaseController;
 use EscolaLms\Courses\Http\Resources\CourseSimpleResource;
 use EscolaLms\CoursesImportExport\Http\Controllers\Swagger\CourseExportImportAPISwagger;
+use EscolaLms\CoursesImportExport\Http\Requests\CloneCourseAPIRequest;
 use EscolaLms\CoursesImportExport\Http\Requests\CourseImportAPIRequest;
 use EscolaLms\CoursesImportExport\Http\Requests\GetCourseExportAPIRequest;
+use EscolaLms\CoursesImportExport\Services\Contracts\CloneCourseServiceContract;
 use EscolaLms\CoursesImportExport\Services\Contracts\ExportImportServiceContract;
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -19,11 +21,14 @@ use Illuminate\Http\JsonResponse;
 class CourseExportImportAPIController extends EscolaLmsBaseController implements CourseExportImportAPISwagger
 {
     protected ExportImportServiceContract $exportImportService;
+    protected CloneCourseServiceContract $cloneCourseService;
 
     public function __construct(
-        ExportImportServiceContract $exportImportService
+        ExportImportServiceContract $exportImportService,
+        CloneCourseServiceContract $cloneCourseService
     ) {
         $this->exportImportService = $exportImportService;
+        $this->cloneCourseService = $cloneCourseService;
     }
 
     public function export(int $course_id, GetCourseExportAPIRequest $request): JsonResponse
@@ -45,5 +50,11 @@ class CourseExportImportAPIController extends EscolaLmsBaseController implements
         } catch (Exception $e) {
             return new JsonResponse(['error' => $e->getMessage()], 400);
         }
+    }
+
+    public function clone(int $course_id, CloneCourseAPIRequest $request): JsonResponse
+    {
+         $this->cloneCourseService->clone($course_id);
+         return $this->sendSuccess(__('Course cloned successfully'));
     }
 }
