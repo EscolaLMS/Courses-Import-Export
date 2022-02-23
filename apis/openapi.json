@@ -1,27 +1,17 @@
 {
     "openapi": "3.0.0",
     "info": {
-        "title": "EscolaLMS",
-        "version": "0.0.1"
+        "title": "EscolaLMS Tags",
+        "version": "0.1"
     },
     "paths": {
-        "/api/admin/courses/{id}/export": {
+        "/api/tags": {
             "get": {
                 "tags": [
-                    "Admin Courses"
+                    "tags"
                 ],
-                "description": "Exports course to ZIP package ",
-                "operationId": "4d345f589c999b1f02e785b1566386fc",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "number"
-                        }
-                    }
-                ],
+                "description": "Display a listing of the Tag",
+                "operationId": "EscolaLms\\Tags\\Http\\Controllers\\Swagger\\TagsApiSwagger::index",
                 "responses": {
                     "200": {
                         "description": "successful operation",
@@ -35,30 +25,29 @@
                             "application/json": {}
                         }
                     }
-                },
-                "security": [
-                    {
-                        "passport": []
-                    }
-                ]
-            }
-        },
-        "/api/admin/courses/zip/import": {
-            "post": {
-                "tags": [
-                    "Admin Courses"
-                ],
-                "description": "Imports course from ZIP package ",
-                "operationId": "6d4f418d042a8de8c15875c41ece860f",
+                }
+            },
+            "delete": {
+                "summary": "Destroy Tags",
+                "description": "Destroy Tags",
+                "operationId": "EscolaLms\\Tags\\Http\\Controllers\\Swagger\\TagsApiSwagger::destroy",
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "multipart/form-data": {
+                        "application/json": {
                             "schema": {
                                 "properties": {
-                                    "file": {
-                                        "type": "file",
-                                        "format": "file"
+                                    "tags": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "": {
+                                                    "type": "integer",
+                                                    "example": "1"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
                                     }
                                 },
                                 "type": "object"
@@ -67,24 +56,138 @@
                     }
                 },
                 "responses": {
-                    "201": {
-                        "description": "Course imported successfully"
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {}
+                        }
                     },
-                    "401": {
-                        "description": "endpoint requires authentication"
+                    "422": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {}
+                        }
+                    }
+                }
+            }
+        },
+        "/api/tags/unique": {
+            "get": {
+                "tags": [
+                    "tags"
+                ],
+                "description": "Display the unique Tags",
+                "operationId": "EscolaLms\\Tags\\Http\\Controllers\\Swagger\\TagsApiSwagger::unique",
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {}
+                        }
                     },
-                    "403": {
-                        "description": "user doesn't have required access rights"
-                    },
-                    "500": {
-                        "description": "server-side error"
+                    "422": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {}
+                        }
+                    }
+                }
+            }
+        },
+        "/api/tags/create": {
+            "post": {
+                "tags": [
+                    "tags"
+                ],
+                "description": "Create multiple Tags",
+                "operationId": "EscolaLms\\Tags\\Http\\Controllers\\Swagger\\TagsApiSwagger::create",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "model_type": {
+                                        "type": "string",
+                                        "example": "Category"
+                                    },
+                                    "model_id": {
+                                        "type": "integer",
+                                        "example": "1"
+                                    },
+                                    "tags": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "title": {
+                                                                "type": "string",
+                                                                "example": "Nowości"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
                     }
                 },
-                "security": [
-                    {
-                        "passport": []
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {}
+                        }
+                    },
+                    "422": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {}
+                        }
                     }
-                ]
+                }
+            }
+        },
+        "/api/tags/{tag}": {
+            "get": {
+                "tags": [
+                    "tags"
+                ],
+                "description": "Display the specified Tag",
+                "operationId": "EscolaLms\\Tags\\Http\\Controllers\\Swagger\\TagsApiSwagger::show",
+                "parameters": [
+                    {
+                        "name": "tag",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {}
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {}
+                        }
+                    }
+                }
             }
         }
     }
