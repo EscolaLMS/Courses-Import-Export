@@ -13,8 +13,9 @@ class Course extends BaseCourse
 {
     private function fixPath($key): array
     {
-        $value = $this->$key;
+        $value =  'public/' . $this->$key;
         $destination = sprintf('courses/%d/%s', $this->id, basename($value));
+
         if (strpos($value, $destination) === false && Storage::exists($value)) {
             $result = [$value, $destination];
             if (!Storage::exists($destination)) {

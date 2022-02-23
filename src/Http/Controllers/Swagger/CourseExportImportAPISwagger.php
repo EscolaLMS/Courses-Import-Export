@@ -2,6 +2,7 @@
 
 namespace EscolaLms\CoursesImportExport\Http\Controllers\Swagger;
 
+use EscolaLms\CoursesImportExport\Http\Requests\CloneCourseAPIRequest;
 use EscolaLms\CoursesImportExport\Http\Requests\CourseImportAPIRequest;
 use EscolaLms\CoursesImportExport\Http\Requests\GetCourseExportAPIRequest;
 use Illuminate\Http\JsonResponse;
@@ -83,4 +84,38 @@ interface CourseExportImportAPISwagger
      * )
      */
     public function import(CourseImportAPIRequest $request): JsonResponse;
+
+    /**
+     * @OA\Get(
+     *      tags={"Admin Courses"},
+     *      path="/api/admin/courses/{id}/clone",
+     *      description="Course cloning",
+     *      security={
+     *          {"passport": {}},
+     *      },
+     *      @OA\Parameter(
+     *          name="id",
+     *          required=true,
+     *          in="path",
+     *          @OA\Schema(
+     *              type="number",
+     *          ),
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="successful operation",
+     *          @OA\MediaType(
+     *              mediaType="application/json",
+     *          ),
+     *      ),
+     *      @OA\Response(
+     *          response=422,
+     *          description="Bad request",
+     *          @OA\MediaType(
+     *              mediaType="application/json"
+     *          )
+     *      )
+     *   )
+     */
+    public function clone(int $course_id, CloneCourseAPIRequest $request): JsonResponse;
 }
