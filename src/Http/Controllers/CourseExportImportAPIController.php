@@ -54,7 +54,7 @@ class CourseExportImportAPIController extends EscolaLmsBaseController implements
 
     public function clone(int $course_id, CloneCourseAPIRequest $request): JsonResponse
     {
-         $this->cloneCourseService->clone($course_id);
+         $this->cloneCourseService->clone($request->getCourse());
          return $this->sendSuccess(__('Course cloned successfully'));
     }
 }

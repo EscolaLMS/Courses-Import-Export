@@ -2,41 +2,48 @@
 
 namespace EscolaLms\CoursesImportExport\Jobs;
 
+use EscolaLms\Courses\Models\Course;
+use EscolaLms\CoursesImportExport\Events\CloneCourseFailedEvent;
+use EscolaLms\CoursesImportExport\Events\CloneCourseFinishedEvent;
 use EscolaLms\CoursesImportExport\Services\Contracts\ExportImportServiceContract;
+use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\File;
 
 class CloneCourse implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    private int $courseId;
+    private Course $course;
 
     /**
      * @param int $courseId
      */
-    public function __construct(int $courseId)
+    public function __construct(Course $course)
     {
-        $this->courseId = $courseId;
+        $this->course = $course;
     }
 
     public function handle(ExportImportServiceContract $exportImportService): bool
     {
-        $fileDir = $exportImportService->export($this->courseId, false);
+        try {
+            $fileDir = $exportImportService->export($this->course->getKey(), false);
+            $file = $this->createFileToExport($fileDir);
+            $course = $exportImportService->import($file);
 
-        if (!File::exists($fileDir)) {
-            return false;
+            CloneCourseFinishedEvent::dispatch(auth()->user(), $course);
+
+            return true;
+
+        } catch (Exception $exception) {
+            CloneCourseFailedEvent::dispatch(auth()->user(), $this->course);
         }
 
-        $file = $this->createFileToExport($fileDir);
-        $exportImportService->import($file);
-
-        return true;
+        return false;
     }
 
     private function createFileToExport(string $fileDir): UploadedFile

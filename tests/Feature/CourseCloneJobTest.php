@@ -8,6 +8,8 @@ use EscolaLms\Core\Tests\CreatesUsers;
 use EscolaLms\Courses\Models\Course;
 use EscolaLms\Courses\Models\Lesson;
 use EscolaLms\Courses\Models\Topic;
+use EscolaLms\CoursesImportExport\Events\CloneCourseFailedEvent;
+use EscolaLms\CoursesImportExport\Events\CloneCourseFinishedEvent;
 use EscolaLms\CoursesImportExport\Jobs\CloneCourse;
 use EscolaLms\CoursesImportExport\Services\Contracts\ExportImportServiceContract;
 use EscolaLms\CoursesImportExport\Tests\TestCase;
@@ -25,6 +27,7 @@ use EscolaLms\TopicTypes\Models\TopicContent\Video;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
 use Peopleaps\Scorm\Model\ScormScoModel;
 
@@ -32,12 +35,28 @@ class CourseCloneJobTest extends TestCase
 {
     use CreatesUsers, DatabaseTransactions, WithFaker;
 
+    public function testCloneCourseJobFailed(): void
+    {
+        Storage::fake();
+        Event::fake();
+
+        $this->be($this->makeAdmin());
+        $course = $this->createCourse();
+        $job = new CloneCourse($course);
+        $job->handle(app()->make(ExportImportServiceContract::class));
+
+        Event::assertNotDispatched(CloneCourseFinishedEvent::class);
+        Event::assertDispatched(CloneCourseFailedEvent::class, fn($elem) => $elem->getCourse()->getKey() === $course->getKey());
+    }
+
     public function testCloneCourseJob(): void
     {
+        Event::fake();
+
         $this->be($this->makeAdmin());
         $course = $this->createCourse();
 
-        $job = new CloneCourse($course->getKey());
+        $job = new CloneCourse($course);
         $job->handle(app()->make(ExportImportServiceContract::class));
 
         $cloned = Course::all()->last();
@@ -76,11 +95,14 @@ class CourseCloneJobTest extends TestCase
         Storage::exists($cloned->image_path);
         Storage::exists($cloned->poster_path);
         Storage::exists($cloned->video_path);
+
+        Event::assertDispatched(CloneCourseFinishedEvent::class, fn($elem) => $elem->getCourse()->getKey() === $cloned->getKey());
+        Event::assertNotDispatched(CloneCourseFailedEvent::class);
     }
 
     private function createCourse(): Course
     {
-        //Storage::fake();
+        Storage::fake('clone');
         Storage::put('dummy.mp4', 'Some dummy data');
         Storage::put('dummy.mp3', 'Some dummy data');
         Storage::put('dummy.jpg', 'Some dummy data');
