@@ -13,6 +13,6 @@ class CloneCourseService implements CloneCourseServiceContract
      */
     public function clone(int $id)
     {
-        CloneCourse::dispatch($id)->onQueue('course_clone');
+        CloneCourse::dispatch($id);
     }
 }

@@ -9,6 +9,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\File;
 
 class CloneCourse implements ShouldQueue
 {
@@ -24,11 +25,18 @@ class CloneCourse implements ShouldQueue
         $this->courseId = $courseId;
     }
 
-    public function handle(ExportImportServiceContract $exportImportService)
+    public function handle(ExportImportServiceContract $exportImportService): bool
     {
         $fileDir = $exportImportService->export($this->courseId, false);
+
+        if (!File::exists($fileDir)) {
+            return false;
+        }
+
         $file = $this->createFileToExport($fileDir);
         $exportImportService->import($file);
+
+        return true;
     }
 
     private function createFileToExport(string $fileDir): UploadedFile
