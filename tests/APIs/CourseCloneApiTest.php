@@ -37,7 +37,6 @@ class CourseCloneApiTest extends TestCase
             ->assertOk();
 
         Queue::assertPushed(CloneCourse::class);
-        Event::assertDispatched(CloneCourseStartedEvent::class, fn($elem) => $elem->getCourse()->getKey() === $course->getKey());
     }
 
     public function testCloneCourseAnonymousUser(): void
@@ -51,7 +50,6 @@ class CourseCloneApiTest extends TestCase
             ->assertUnauthorized();
 
         Queue::assertNotPushed(CloneCourse::class);
-        Event::assertNotDispatched(CloneCourseStartedEvent::class);
     }
 
     public function testCloneNonExistentCourse(): void
@@ -65,6 +63,5 @@ class CourseCloneApiTest extends TestCase
             ->assertNotFound();
 
         Queue::assertNotPushed(CloneCourse::class);
-        Event::assertNotDispatched(CloneCourseStartedEvent::class);
     }
 }
