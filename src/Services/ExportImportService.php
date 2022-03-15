@@ -105,7 +105,7 @@ class ExportImportService implements ExportImportServiceContract
 
         Storage::deleteDirectory($dirName.'/content');
 
-        return $withUrl ? $this->getExportUrl($dirPath, $filename) : $this->getExportDir($dirPath, $filename);
+        return $withUrl ? $this->getExportUrl($dirName, $filename) : $this->getExportDir($dirPath, $filename);
     }
 
     private function getExportUrl(string $dirName, string $fileName): string

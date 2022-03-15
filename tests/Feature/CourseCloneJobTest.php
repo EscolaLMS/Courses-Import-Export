@@ -10,11 +10,11 @@ use EscolaLms\Courses\Models\Lesson;
 use EscolaLms\Courses\Models\Topic;
 use EscolaLms\CoursesImportExport\Events\CloneCourseFailedEvent;
 use EscolaLms\CoursesImportExport\Events\CloneCourseFinishedEvent;
+use EscolaLms\CoursesImportExport\Events\CloneCourseStartedEvent;
 use EscolaLms\CoursesImportExport\Jobs\CloneCourse;
 use EscolaLms\CoursesImportExport\Services\Contracts\ExportImportServiceContract;
 use EscolaLms\CoursesImportExport\Tests\TestCase;
 use EscolaLms\HeadlessH5P\Models\H5PContent;
-use EscolaLms\HeadlessH5P\Models\H5PLibrary;
 use EscolaLms\HeadlessH5P\Repositories\Contracts\H5PContentRepositoryContract;
 use EscolaLms\Scorm\Services\Contracts\ScormServiceContract;
 use EscolaLms\Tags\Models\Tag;
@@ -40,9 +40,10 @@ class CourseCloneJobTest extends TestCase
         Storage::fake();
         Event::fake();
 
-        $this->be($this->makeAdmin());
+        $user = $this->makeAdmin();
+        $this->be($user);
         $course = $this->createCourse();
-        $job = new CloneCourse($course);
+        $job = new CloneCourse($course, $user);
         $job->handle(app()->make(ExportImportServiceContract::class));
 
         Event::assertNotDispatched(CloneCourseFinishedEvent::class);
@@ -53,10 +54,11 @@ class CourseCloneJobTest extends TestCase
     {
         Event::fake();
 
-        $this->be($this->makeAdmin());
+        $user = $this->makeAdmin();
+        $this->be($user);
         $course = $this->createCourse();
 
-        $job = new CloneCourse($course);
+        $job = new CloneCourse($course, $user);
         $job->handle(app()->make(ExportImportServiceContract::class));
 
         $cloned = Course::all()->last();
@@ -96,6 +98,7 @@ class CourseCloneJobTest extends TestCase
         Storage::exists($cloned->poster_path);
         Storage::exists($cloned->video_path);
 
+        Event::assertDispatched(CloneCourseStartedEvent::class, fn($elem) => $elem->getCourse()->getKey() === $course->getKey());
         Event::assertDispatched(CloneCourseFinishedEvent::class, fn($elem) => $elem->getCourse()->getKey() === $cloned->getKey());
         Event::assertNotDispatched(CloneCourseFailedEvent::class);
     }

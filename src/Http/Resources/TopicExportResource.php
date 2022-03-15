@@ -35,7 +35,7 @@ class TopicExportResource extends JsonResource
             'description' => $this->description,
             'resources' => TopicExportResourceResource::collection($this->resources),
             'order' => $this->order,
-            'json' => $this->json,
+            'json' => null,
             'can_skip' => $this->can_skip,
         ];
     }
