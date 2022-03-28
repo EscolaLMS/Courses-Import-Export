@@ -41,7 +41,6 @@ class CourseExportResource extends JsonResource
             'summary' => $course->summary,
             'image_path' => self::sanitizePath($course->image_path),
             'video_path' => self::sanitizePath($course->video_path),
-            'base_price' => $course->base_price,
             'duration' => $course->duration,
             'scorm_sco' => $this->when($course->scorm_sco_id !== null, fn () => CourseScormScoExportResource::make($course)),
             'status' => $course->status,

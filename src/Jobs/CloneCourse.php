@@ -21,7 +21,7 @@ class CloneCourse implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public $tries = 1;
+    public $tries = 3;
     public $timeout = 18000;
 
     private Course $course;

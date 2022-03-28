@@ -35,14 +35,20 @@ class CourseCloneJobTest extends TestCase
 {
     use CreatesUsers, DatabaseTransactions, WithFaker;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Storage::fake('clone');
+        Event::fake();
+    }
+
     public function testCloneCourseJobFailed(): void
     {
-        Storage::fake();
-        Event::fake();
-
         $user = $this->makeAdmin();
         $this->be($user);
-        $course = $this->createCourse();
+
+        $course = $this->createInvalidCourse();
+
         $job = new CloneCourse($course, $user);
         $job->handle(app()->make(ExportImportServiceContract::class));
 
@@ -52,8 +58,6 @@ class CourseCloneJobTest extends TestCase
 
     public function testCloneCourseJob(): void
     {
-        Event::fake();
-
         $user = $this->makeAdmin();
         $this->be($user);
         $course = $this->createCourse();
@@ -103,9 +107,24 @@ class CourseCloneJobTest extends TestCase
         Event::assertNotDispatched(CloneCourseFailedEvent::class);
     }
 
+    private function createInvalidCourse(): Course
+    {
+        $course = $this->createCourse();
+        $lesson = $course->lessons->first();
+        $topic = Topic::factory()->create([
+            'lesson_id' => $lesson->id,
+        ]);
+        $topicable = H5P::factory()->create([
+            'value' => 555
+        ]);
+        $topic->topicable()->associate($topicable)->save();
+        $course->save();
+
+        return $course;
+    }
+
     private function createCourse(): Course
     {
-        Storage::fake('clone');
         Storage::put('dummy.mp4', 'Some dummy data');
         Storage::put('dummy.mp3', 'Some dummy data');
         Storage::put('dummy.jpg', 'Some dummy data');

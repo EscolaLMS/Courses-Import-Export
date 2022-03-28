@@ -140,8 +140,9 @@ class ExportImportService implements ExportImportServiceContract
                 return $this->createCourseFromImport($content, $dirFullPath);
             });
         } catch (Exception $e) {
-            Log::error('[' . self::class . '] ' . $e->getMessage());
-            throw new Exception(__('Invalid data'));
+            $message = '[' . self::class . '] ' . $e->getMessage();
+            Log::error($message);
+            throw new Exception($message);
         } finally {
             Storage::deleteDirectory($dirPath);
         }
@@ -303,7 +304,10 @@ class ExportImportService implements ExportImportServiceContract
     private function addFilesToArrayBasedOnPath(array $data, string $dirFullPath): array
     {
         foreach ($data as $key => $value) {
-            if (Str::endsWith($key, '_path') && File::exists($dirFullPath . DIRECTORY_SEPARATOR . $value)) {
+            if (Str::endsWith($key, '_path')
+                && File::exists($dirFullPath . DIRECTORY_SEPARATOR . $value)
+                && !File::isDirectory($dirFullPath . DIRECTORY_SEPARATOR . $value)
+            ) {
                 $fileKey = Str::before($key, '_path');
                 $data[$fileKey] = new UploadedFile(
                     $dirFullPath . DIRECTORY_SEPARATOR . $value,
