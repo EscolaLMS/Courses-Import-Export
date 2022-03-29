@@ -12,7 +12,7 @@ class CourseExportResource extends JsonResource
 
     public static function sanitizePath(string $path = null): string
     {
-        return isset($path) ? preg_replace('/courses\/[0-9]+\//', '', $path) : "";
+        return isset($path) ? preg_replace('/course\/[0-9]+\//', '', $path) : "";
     }
 
     public function __construct(Course $resource)

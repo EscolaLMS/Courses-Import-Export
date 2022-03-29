@@ -14,7 +14,7 @@ class Course extends BaseCourse
     private function fixPath($key): array
     {
         $value =  'public/' . $this->$key;
-        $destination = sprintf('courses/%d/%s', $this->id, basename($value));
+        $destination = sprintf('course/%d/%s', $this->id, basename($value));
 
         if (strpos($value, $destination) === false && Storage::exists($value)) {
             $result = [$value, $destination];
@@ -38,7 +38,7 @@ class Course extends BaseCourse
         }
 
         $scorm = $this->scormSco->scorm;
-        $destination = sprintf('courses/%d/%s', $this->id, basename(CoursesImportExportEnum::SCORM_FILE));
+        $destination = sprintf('course/%d/%s', $this->id, basename(CoursesImportExportEnum::SCORM_FILE));
 
         $scormService = app(ScormServiceContract::class);
         $scormZipPath = $scormService->zipScorm($scorm->getKey());
@@ -72,7 +72,7 @@ class Course extends BaseCourse
             return $this->fixCategoryPath($category->parent);
         }
 
-        $destination = sprintf('courses/%d/%s', $this->id, $category->icon);
+        $destination = sprintf('course/%d/%s', $this->id, $category->icon);
         if (!Storage::exists($destination)) {
             Storage::copy($category->icon, $destination);
         }

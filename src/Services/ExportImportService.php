@@ -69,12 +69,12 @@ class ExportImportService implements ExportImportServiceContract
 
         $json = json_encode($program);
 
-        Storage::put($dirName.'/content/content.json', $json);
+        Storage::put($dirName . '/content/content.json', $json);
     }
 
     private function copyCourseFilesToExportFolder(int $courseId): string
     {
-        $dirName = 'exports/courses/'.$courseId;
+        $dirName = 'exports/courses/' . $courseId;
 
         if (Storage::exists($dirName)) {
             Storage::deleteDirectory($dirName);
@@ -82,8 +82,8 @@ class ExportImportService implements ExportImportServiceContract
 
         Storage::makeDirectory($dirName);
 
-        $dirFrom = 'courses/'.$courseId;
-        $dirTo = 'exports/courses/'.$courseId.'/content';
+        $dirFrom = 'course/' . $courseId;
+        $dirTo = 'exports/courses/' . $courseId . '/content';
         $fromFiles = Storage::allFiles($dirFrom);
 
         foreach ($fromFiles as $fromFile) {
