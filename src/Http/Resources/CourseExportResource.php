@@ -12,7 +12,7 @@ class CourseExportResource extends JsonResource
 
     public static function sanitizePath(string $path = null): string
     {
-        return isset($path) ? preg_replace('/courses\/[0-9]+\//', '', $path) : "";
+        return isset($path) ? preg_replace('/course\/[0-9]+\//', '', $path) : "";
     }
 
     public function __construct(Course $resource)
@@ -41,7 +41,6 @@ class CourseExportResource extends JsonResource
             'summary' => $course->summary,
             'image_path' => self::sanitizePath($course->image_path),
             'video_path' => self::sanitizePath($course->video_path),
-            'base_price' => $course->base_price,
             'duration' => $course->duration,
             'scorm_sco' => $this->when($course->scorm_sco_id !== null, fn () => CourseScormScoExportResource::make($course)),
             'status' => $course->status,

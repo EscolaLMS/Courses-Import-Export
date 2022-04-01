@@ -69,12 +69,12 @@ class ExportImportService implements ExportImportServiceContract
 
         $json = json_encode($program);
 
-        Storage::put($dirName.'/content/content.json', $json);
+        Storage::put($dirName . '/content/content.json', $json);
     }
 
     private function copyCourseFilesToExportFolder(int $courseId): string
     {
-        $dirName = 'exports/courses/'.$courseId;
+        $dirName = 'exports/courses/' . $courseId;
 
         if (Storage::exists($dirName)) {
             Storage::deleteDirectory($dirName);
@@ -82,8 +82,8 @@ class ExportImportService implements ExportImportServiceContract
 
         Storage::makeDirectory($dirName);
 
-        $dirFrom = 'courses/'.$courseId;
-        $dirTo = 'exports/courses/'.$courseId.'/content';
+        $dirFrom = 'course/' . $courseId;
+        $dirTo = 'exports/courses/' . $courseId . '/content';
         $fromFiles = Storage::allFiles($dirFrom);
 
         foreach ($fromFiles as $fromFile) {
@@ -140,8 +140,9 @@ class ExportImportService implements ExportImportServiceContract
                 return $this->createCourseFromImport($content, $dirFullPath);
             });
         } catch (Exception $e) {
-            Log::error('[' . self::class . '] ' . $e->getMessage());
-            throw new Exception(__('Invalid data'));
+            $message = '[' . self::class . '] ' . $e->getMessage();
+            Log::error($message);
+            throw new Exception($message);
         } finally {
             Storage::deleteDirectory($dirPath);
         }
@@ -303,7 +304,10 @@ class ExportImportService implements ExportImportServiceContract
     private function addFilesToArrayBasedOnPath(array $data, string $dirFullPath): array
     {
         foreach ($data as $key => $value) {
-            if (Str::endsWith($key, '_path') && File::exists($dirFullPath . DIRECTORY_SEPARATOR . $value)) {
+            if (Str::endsWith($key, '_path')
+                && File::exists($dirFullPath . DIRECTORY_SEPARATOR . $value)
+                && !File::isDirectory($dirFullPath . DIRECTORY_SEPARATOR . $value)
+            ) {
                 $fileKey = Str::before($key, '_path');
                 $data[$fileKey] = new UploadedFile(
                     $dirFullPath . DIRECTORY_SEPARATOR . $value,
