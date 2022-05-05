@@ -1,10 +1,10 @@
 <?php
 
 use EscolaLms\CoursesImportExport\Http\Controllers\CourseExportImportAPIController;
-use EscolaLms\Core\Http\Facades\Route;
+use Illuminate\Routing\Route;
 
 // admin endpoints
-Route::group(['middleware' => Route::apply(['auth:api']), 'prefix' => 'api/admin'], function () {
+Route::group(['middleware' => ['auth:api'], 'prefix' => 'api/admin'], function () {
     Route::get('courses/{course}/clone', [CourseExportImportAPIController::class, 'clone']);
     Route::get('courses/{course}/export', [CourseExportImportAPIController::class, 'export']);
     Route::post('courses/zip/import', [CourseExportImportAPIController::class, 'import']);
