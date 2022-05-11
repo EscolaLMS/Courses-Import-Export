@@ -27,6 +27,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use ZanySoft\Zip\Zip;
+use ZipArchive;
 
 class ExportImportService implements ExportImportServiceContract
 {
@@ -97,25 +98,38 @@ class ExportImportService implements ExportImportServiceContract
     private function createZipFromFolder($dirName, bool $withUrl = true): string
     {
         $filename = uniqid(rand(), true).'.zip';
+        $zip = new ZipArchive();
+        $zipFile = Storage::disk('local')->path($dirName . DIRECTORY_SEPARATOR . $filename);
 
-        $dirPath = Storage::path($dirName);
-        $zip = Zip::create($dirPath.'/'.$filename);
-        $zip->add($dirPath.'/content', true);
+        if (!$zip->open($zipFile, ZipArchive::CREATE | ZipArchive::OVERWRITE)) {
+            throw new \Exception("Zip file could not be created: " . $zip->getStatusString());
+        }
+
+        $files = Storage::allFiles($dirName . '/content');
+        foreach ($files as $file) {
+            $content = Storage::get($file);
+            $dir = str_replace($dirName . '/content', '', $file);
+
+            if (! $zip->addFromString($dir, $content)) {
+                throw new \Exception("File [`{$file}`] could not be added to the zip file: " . $zip->getStatusString());
+            }
+        }
+
         $zip->close();
 
-        Storage::deleteDirectory($dirName.'/content');
+        Storage::deleteDirectory($dirName . '/content');
 
-        return $withUrl ? $this->getExportUrl($dirName, $filename) : $this->getExportDir($dirPath, $filename);
+        return $withUrl ? $this->getExportUrl($dirName, $filename) : $this->getExportDir($dirName, $filename);
     }
 
     private function getExportUrl(string $dirName, string $fileName): string
     {
-        return Storage::url($dirName. DIRECTORY_SEPARATOR . $fileName);
+        return Storage::disk('local')->url($dirName. DIRECTORY_SEPARATOR . $fileName);
     }
 
     private function getExportDir(string $dirName, string $fileName): string
     {
-        return $dirName. DIRECTORY_SEPARATOR . $fileName;
+        return Storage::disk('local')->path($dirName. DIRECTORY_SEPARATOR . $fileName);
     }
 
     public function export($courseId, bool $withUrl = true): string
@@ -152,11 +166,11 @@ class ExportImportService implements ExportImportServiceContract
 
     private function extractZipFile(UploadedFile $zipFile, string $dirPath): string
     {
-        if (Storage::exists($dirPath)) {
-            Storage::deleteDirectory($dirPath);
+        if (Storage::disk('local')->exists($dirPath)) {
+            Storage::disk('local')->deleteDirectory($dirPath);
         }
 
-        $dirFullPath = Storage::path($dirPath);
+        $dirFullPath = Storage::disk('local')->path($dirPath);
         Zip::open($zipFile)->extract($dirFullPath);
 
         return $dirFullPath;

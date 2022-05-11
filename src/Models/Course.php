@@ -43,9 +43,12 @@ class Course extends BaseCourse
         $scormService = app(ScormServiceContract::class);
         $scormZipPath = $scormService->zipScorm($scorm->getKey());
 
-        if (!Storage::exists($destination)) {
-            Storage::move($scormZipPath, $destination);
+        if (Storage::exists($destination)) {
+            Storage::delete($destination);
         }
+
+        $inputStream = Storage::disk('local')->getDriver()->readStream($scormZipPath);
+        Storage::getDriver()->writeStream($destination, $inputStream);
 
         return $destination ? [$destination] : [];
     }
