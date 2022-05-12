@@ -92,7 +92,7 @@ class CourseExportAdminApiTest extends TestCase
     /**
      * @test
      */
-    public function testExportiCreated()
+    public function testExportCreated()
     {
         $id = $this->course->id;
 
