@@ -99,6 +99,11 @@ class ExportImportService implements ExportImportServiceContract
     {
         $filename = uniqid(rand(), true).'.zip';
         $zip = new ZipArchive();
+
+        if (!Storage::disk('local')->exists($dirName)) {
+            Storage::disk('local')->makeDirectory($dirName);
+        }
+
         $zipFile = Storage::disk('local')->path($dirName . DIRECTORY_SEPARATOR . $filename);
 
         if (!$zip->open($zipFile, ZipArchive::CREATE | ZipArchive::OVERWRITE)) {
