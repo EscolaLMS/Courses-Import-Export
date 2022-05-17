@@ -6,7 +6,6 @@ use EscolaLms\Categories\Models\Category;
 use EscolaLms\Courses\Models\Course as BaseCourse;
 use EscolaLms\CoursesImportExport\Enums\CoursesImportExportEnum;
 use EscolaLms\Scorm\Services\Contracts\ScormServiceContract;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 
 class Course extends BaseCourse
@@ -72,11 +71,11 @@ class Course extends BaseCourse
     public function fixCategoryPath(Category $category): string
     {
         if ($category->parent) {
-            return $this->fixCategoryPath($category->parent);
+            $this->fixCategoryPath($category->parent);
         }
 
         $destination = sprintf('course/%d/%s', $this->id, $category->icon);
-        if (!Storage::exists($destination)) {
+        if (!Storage::exists($destination) && Storage::exists($category->icon)) {
             Storage::copy($category->icon, $destination);
         }
 
