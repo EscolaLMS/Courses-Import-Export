@@ -28,6 +28,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use ZanySoft\Zip\Zip;
 use ZipArchive;
+use Illuminate\Http\File as HttpFile;
 
 class ExportImportService implements ExportImportServiceContract
 {
@@ -201,7 +202,8 @@ class ExportImportService implements ExportImportServiceContract
 
         $filePath = $this->dirFullPath . DIRECTORY_SEPARATOR . $category['icon'];
         if (File::exists($filePath)) {
-            $category['icon'] = Storage::putFile('categories', $filePath, 'public');
+            $file = new HttpFile($filePath);
+            $category['icon'] = Storage::putFile('categories', $file, 'public'); // TODO to sie wywali
         }
 
         if ($category['parent']) {
@@ -266,8 +268,12 @@ class ExportImportService implements ExportImportServiceContract
         return $lesson;
     }
 
-    private function createTopicFromImport(array $topicData, string $dirFullPath): Model
+    private function createTopicFromImport(array $topicData, string $dirFullPath): ?Model
     {
+        if (!isset($topicData['topicable_type'])) {
+            return null;
+        }
+
         $topicData = array_merge($topicData, $topicData['topicable'] ?? []);
         unset($topicData['topicable']);
 
