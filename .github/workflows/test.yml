@@ -30,8 +30,8 @@ jobs:
       - name: Update composer
         run: composer update
 
-      - name: require courses
-        run: COMPOSER_ROOT_VERSION=0.9.9 composer require escolalms/courses escolalms/topic-types
+#      - name: require courses
+#        run: COMPOSER_ROOT_VERSION=0.9.9 composer require escolalms/courses escolalms/topic-types
 
       - name: Clear config
         run: vendor/bin/testbench config:clear
@@ -69,8 +69,8 @@ jobs:
       - name: Update composer
         run: composer update
 
-      - name: require courses
-        run: COMPOSER_ROOT_VERSION=0.9.9 composer require escolalms/courses escolalms/topic-types
+#      - name: require courses
+#        run: COMPOSER_ROOT_VERSION=0.9.9 composer require escolalms/courses escolalms/topic-types
 
       - name: Clear config
         run: vendor/bin/testbench config:clear
@@ -104,8 +104,8 @@ jobs:
       - name: Update composer
         run: composer update
 
-      - name: require courses
-        run: COMPOSER_ROOT_VERSION=0.9.9 composer require escolalms/courses escolalms/topic-types
+#      - name: require courses
+#        run: COMPOSER_ROOT_VERSION=0.9.9 composer require escolalms/courses escolalms/topic-types
 
       - name: Setup environment
         run: cp env/postgres/* .
@@ -151,8 +151,8 @@ jobs:
       - name: Update composer
         run: composer update
 
-      - name: require courses
-        run: COMPOSER_ROOT_VERSION=0.9.9 composer require escolalms/courses escolalms/topic-types
+#      - name: require courses
+#        run: COMPOSER_ROOT_VERSION=0.9.9 composer require escolalms/courses escolalms/topic-types
 
       - name: Setup environment
         run: cp env/postgres/* .
