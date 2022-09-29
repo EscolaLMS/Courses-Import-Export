@@ -69,6 +69,16 @@ class CourseCloneJobTest extends TestCase
 
         $this->assertEquals($course->title, $cloned->title);
         $this->assertEquals($course->summary, $cloned->summary);
+        $this->assertNotEquals($course->image_path, $cloned->image_path);
+        $this->assertNotEquals($course->video_path, $cloned->video_path);
+        $this->assertNotEquals($course->poster_path, $cloned->poster_path);
+
+        Storage::exists($course->image_path);
+        Storage::exists($course->poster_path);
+        Storage::exists($course->video_path);
+        Storage::exists($cloned->image_path);
+        Storage::exists($cloned->poster_path);
+        Storage::exists($cloned->video_path);
 
         $this->assertEquals(1, $course->categories()->count());
         $this->assertEquals($course->categories()->count(), $cloned->categories()->count());
@@ -81,19 +91,6 @@ class CourseCloneJobTest extends TestCase
         $this->assertEquals($course->lessons()->count(), $cloned->lessons()->count());
         $this->assertEquals(6, $course->lessons()->with('topics')->get()->map(fn($elem) => $elem->topics)->flatten()->count());
         $this->assertEquals(6, $cloned->lessons()->with('topics')->get()->map(fn($elem) => $elem->topics)->flatten()->count());
-
-        $this->assertNotEquals($course->scorm_sco_id, $cloned->scorm_sco_id);
-        $this->assertNotEquals($course->video_path, $cloned->video_path);
-        $this->assertNotEquals($course->poster_path, $cloned->poster_path);
-        $this->assertNotEquals($course->image_path, $cloned->image_path);
-
-        Storage::exists($course->image_path);
-        Storage::exists($course->poster_path);
-        Storage::exists($course->video_path);
-
-        Storage::exists($cloned->image_path);
-        Storage::exists($cloned->poster_path);
-        Storage::exists($cloned->video_path);
 
         Event::assertDispatched(CloneCourseStartedEvent::class, fn($elem) => $elem->getCourse()->getKey() === $course->getKey());
         Event::assertDispatched(CloneCourseFinishedEvent::class, fn($elem) => $elem->getCourse()->getKey() === $cloned->getKey());
