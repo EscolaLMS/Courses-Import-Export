@@ -30,6 +30,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
 use Peopleaps\Scorm\Model\ScormScoModel;
+use Symfony\Component\Finder\Exception\DirectoryNotFoundException;
 
 class CourseCloneJobTest extends TestCase
 {
@@ -38,7 +39,6 @@ class CourseCloneJobTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        Storage::fake('clone');
         Event::fake();
     }
 
@@ -72,27 +72,20 @@ class CourseCloneJobTest extends TestCase
 
         $this->assertEquals(1, $course->categories()->count());
         $this->assertEquals($course->categories()->count(), $cloned->categories()->count());
-        $this->assertEquals($course->categories()->first()->getKey(), $course->categories()->first()->getKey());
+        $this->assertEquals($course->categories()->first()->getKey(), $cloned->categories()->first()->getKey());
 
         $this->assertEquals(2, $course->tags()->count());
         $this->assertEquals($course->tags()->count(), $cloned->tags()->count());
-        $this->assertEquals($course->tags()->first()->getKey(), $course->tags()->first()->getKey());
 
         $this->assertEquals(1, $course->lessons()->count());
         $this->assertEquals($course->lessons()->count(), $cloned->lessons()->count());
-        $this->assertEquals(
-            6,
-            $course->lessons()->with('topics')->get()->map(fn($elem) => $elem->topics)->flatten()->count()
-        );
-        $this->assertEquals(
-            $course->lessons()->with('topics')->get()->map(fn($elem) => $elem->topics)->flatten()->count(),
-            $cloned->lessons()->with('topics')->get()->map(fn($elem) => $elem->topics)->flatten()->count()
-        );
+        $this->assertEquals(6, $course->lessons()->with('topics')->get()->map(fn($elem) => $elem->topics)->flatten()->count());
+        $this->assertEquals(6, $cloned->lessons()->with('topics')->get()->map(fn($elem) => $elem->topics)->flatten()->count());
 
         $this->assertNotEquals($course->scorm_sco_id, $cloned->scorm_sco_id);
-        $this->assertNotEquals($course->image_path, $cloned->image_path);
-        $this->assertNotEquals($course->poster_path, $cloned->poster_path);
         $this->assertNotEquals($course->video_path, $cloned->video_path);
+        $this->assertNotEquals($course->poster_path, $cloned->poster_path);
+        $this->assertNotEquals($course->image_path, $cloned->image_path);
 
         Storage::exists($course->image_path);
         Storage::exists($course->poster_path);
@@ -125,12 +118,6 @@ class CourseCloneJobTest extends TestCase
 
     private function createCourse(): Course
     {
-        Storage::put('dummy.mp4', 'Some dummy data');
-        Storage::put('dummy.mp3', 'Some dummy data');
-        Storage::put('dummy.jpg', 'Some dummy data');
-        Storage::put('dummy.png', 'Some dummy data');
-        Storage::put('dummy.pdf', 'Some dummy data');
-
         $scormSco = $this->getScormSco();
 
         $course = Course::factory()
@@ -167,19 +154,11 @@ class CourseCloneJobTest extends TestCase
             'lesson_id' => $lesson->id,
         ]);
 
-        $topicable_audio = Audio::factory()->create([
-            'value' => 'dummy.mp3',
-        ]);
-        $topicable_image = Image::factory()->create([
-            'value' => 'dummy.jpg',
-        ]);
-        $topicable_pdf = PDF::factory()->create([
-            'value' => 'dummy.pdf',
-        ]);
-        $topicable_video = Video::factory()->create([
-            'value' => 'dummy.mp4',
-            'poster' => 'dummy.png',
-        ]);
+        $topicable_audio = Audio::factory()->updatePath($topic_audio->getKey())->create();
+        $topicable_image = Image::factory()->updatePath($topic_image->getKey())->create();
+        $topicable_pdf = PDF::factory()->updatePath($topic_pdf->getKey())->create();
+        $topicable_video = $this->createVideo($course, $topic_video);
+
         $topicable_scorm_sco = ScormSco::factory()->create([
             'value' => $scormSco->getKey(),
         ]);
@@ -195,6 +174,20 @@ class CourseCloneJobTest extends TestCase
         $topic_h5p->topicable()->associate($topicable_h5p)->save();
 
         return $course;
+    }
+
+    private function createVideo(Course $course, Topic $topic): Video
+    {
+        $destDir = Storage::path('/course/' . $course->getKey() . '/topic/' . $topic->getKey() . '/video');
+        if (!is_dir($destDir) && (mkdir($destDir, 0777, true) && !is_dir($destDir))) {
+            throw new DirectoryNotFoundException(sprintf('Directory "%s" was not created', $destDir));
+        }
+        copy(__DIR__ . '/../mocks/1.mp4', Storage::path('/course/' . $course->getKey() . '/topic/' . $topic->getKey() . '/video/1.mp4'));
+        copy(__DIR__ . '/../mocks/poster.jpg', Storage::path('/course/' . $course->getKey() . '/topic/' . $topic->getKey() . '/video/poster.jpg'));
+        return Video::factory()->create([
+            'value' =>  'course/' . $course->getKey() . '/topic/' . $topic->getKey() . '/video/1.mp4',
+            'poster' => 'course/' . $course->getKey() . '/topic/' . $topic->getKey() . '/video/poster.jpg'
+        ]);
     }
 
     private function createScorm()
@@ -232,7 +225,7 @@ class CourseCloneJobTest extends TestCase
         $tmpPath = __DIR__ . '/../mocks/tmp.h5p';
         copy($h5Path, $tmpPath);
 
-        $file =  new UploadedFile($tmpPath, basename($h5Path), 'application/zip', null, true);
+        $file = new UploadedFile($tmpPath, basename($h5Path), 'application/zip', null, true);
 
         try {
             $h5pContentRepository = app()->make(H5PContentRepositoryContract::class);

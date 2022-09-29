@@ -203,7 +203,7 @@ class ExportImportService implements ExportImportServiceContract
         $filePath = $this->dirFullPath . DIRECTORY_SEPARATOR . $category['icon'];
         if (File::exists($filePath)) {
             $file = new HttpFile($filePath);
-            $category['icon'] = Storage::putFile('categories', $file, 'public'); // TODO to sie wywali
+            $category['icon'] = Storage::putFile('categories', $file, 'public');
         }
 
         if ($category['parent']) {
