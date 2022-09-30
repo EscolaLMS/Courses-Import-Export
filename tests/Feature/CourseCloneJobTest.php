@@ -65,10 +65,11 @@ class CourseCloneJobTest extends TestCase
         $job = new CloneCourse($course, $user);
         $job->handle(app()->make(ExportImportServiceContract::class));
 
-        $cloned = Course::all()->last();
+        $cloned = Course::query()->orderBy('id', 'desc')->first();
 
         $this->assertEquals($course->title, $cloned->title);
         $this->assertEquals($course->summary, $cloned->summary);
+        $this->assertNotEquals($course->scorm_sco_id, $cloned->scorm_sco_id);
         $this->assertNotEquals($course->image_path, $cloned->image_path);
         $this->assertNotEquals($course->video_path, $cloned->video_path);
         $this->assertNotEquals($course->poster_path, $cloned->poster_path);
