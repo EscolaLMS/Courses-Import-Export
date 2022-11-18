@@ -18,6 +18,7 @@ class EscolaLmsCoursesImportExportServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->loadRoutesFrom(__DIR__.'/routes.php');
+        $this->loadTranslationsFrom(__DIR__ . '/../resources/lang', 'course-import-export');
     }
 
     public function register()
