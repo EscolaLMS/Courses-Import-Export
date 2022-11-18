@@ -54,6 +54,7 @@ class TestCase extends \EscolaLms\Core\Tests\TestCase
         $app['config']->set('database.connections.mysql.strict', false);
         $app['config']->set('app.debug', (bool) env('APP_DEBUG', true));
         $app['config']->set('escolalms.tags.ignore_migrations', false);
+        $app['config']->set('hh5p.h5p_export', true);
         $app['config']->set('filesystems.disks.local', [
             'driver' => 'local',
             'root' => storage_path('app/public'),
