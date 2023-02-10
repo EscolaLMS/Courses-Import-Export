@@ -48,7 +48,7 @@ class CourseExportResource extends JsonResource
             'language' => $course->language,
             'description' => $course->description,
             'level' => $course->level,
-            'lessons' => LessonExportResource::collection($course->lessons->sortBy('order')),
+            'lessons' => LessonExportResource::collection($course->lessons()->main()->orderBy('order')->get()),
             'poster_path' => self::sanitizePath($course->poster_path),
             'categories' => CategoryExportResource::collection($this->categories),
             'tags' => $course->tags
