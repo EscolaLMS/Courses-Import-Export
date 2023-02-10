@@ -52,11 +52,11 @@ interface CourseExportImportAPISwagger
      *          {"passport": {}},
      *      },
      *      @OA\RequestBody(
-     *          required=true,
      *          @OA\MediaType(
      *              mediaType="multipart/form-data",
      *              @OA\Schema(
      *                  type="object",
+     *                  required={"file"},
      *                  @OA\Property(
      *                      property="file",
      *                      type="file",

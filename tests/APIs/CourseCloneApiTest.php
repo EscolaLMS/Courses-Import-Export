@@ -5,8 +5,6 @@ namespace EscolaLms\CoursesImportExport\Tests\APIs;
 use EscolaLms\Core\Tests\CreatesUsers;
 use EscolaLms\Courses\Models\Course;
 use EscolaLms\CoursesImportExport\Database\Seeders\CoursesExportImportPermissionSeeder;
-use EscolaLms\CoursesImportExport\Events\CloneCourseFinishedEvent;
-use EscolaLms\CoursesImportExport\Events\CloneCourseStartedEvent;
 use EscolaLms\CoursesImportExport\Jobs\CloneCourse;
 use EscolaLms\CoursesImportExport\Tests\TestCase;
 use Illuminate\Foundation\Testing\DatabaseTransactions;

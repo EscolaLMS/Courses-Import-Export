@@ -31,6 +31,7 @@ class LessonExportResource extends JsonResource
             'active' => $this->active,
             'topics' => TopicExportResource::collection($lesson->topics->sortBy('order')),
             'order' => $this->order,
+            'children_lessons' => LessonExportResource::collection($lesson->childrenLessons),
         ];
     }
 }
