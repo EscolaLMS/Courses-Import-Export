@@ -78,8 +78,8 @@ class CourseImportApiTest extends TestCase
             )
             ->has(Tag::factory()->count(2))
             ->create([
-            'author_id' => $this->user->getKey(),
-        ]);
+                'author_id' => $this->user->getKey(),
+            ]);
 
         $course->update([
             'image_path' => 'course_image.jpg',
@@ -144,6 +144,19 @@ class CourseImportApiTest extends TestCase
             'name' => 'dummy2.jpg',
         ]);
 
+        $childLesson = Lesson::factory([
+            'parent_lesson_id' => $firstLesson->getKey(),
+            'course_id' => $course->getKey(),
+        ])
+            ->create();
+
+        $childTopicRichtexts = Topic::factory()->create([
+            'lesson_id' => $childLesson->getKey(),
+        ]);
+
+        $topicableChildTopicRichtexts = RichText::factory()->create();
+        $childTopicRichtexts->topicable()->associate($topicableChildTopicRichtexts)->save();
+
         $this->course = $course;
         $courseResource = CourseExportResource::make($course);
         $content = json_decode($courseResource->toJson(), true);
@@ -200,7 +213,7 @@ class CourseImportApiTest extends TestCase
         $this->response->assertCreated();
 
         $this->response->assertJsonFragment([
-           'title' => $this->course->title,
+            'title' => $this->course->title,
         ]);
 
         $responseData = $this->response->getData()->data;
@@ -208,7 +221,7 @@ class CourseImportApiTest extends TestCase
         Storage::assertExists($responseData->video_path);
         Storage::assertExists($responseData->poster_path);
 
-        $lesson = Lesson::where('course_id', $responseData->id)->first();
+        $lesson = Lesson::where('course_id', $responseData->id)->main()->first();
         $topics = $lesson->topics;
 
         foreach ($topics as $topic) {
@@ -221,6 +234,9 @@ class CourseImportApiTest extends TestCase
                 Storage::assertExists($resource->path);
             }
         }
+
+        $this->assertCount(1, $lesson->childrenLessons);
+        $this->assertCount(1, $lesson->childrenLessons->first()->topics);
 
         $this->assertCount(2, $responseData->categories);
         $this->assertCount(2, $responseData->tags);
