@@ -15,7 +15,7 @@
     "escolalms/settings": "^0",
     "escolalms/headless-h5p": "^0",
     "escolalms/topic-types": "^0",
-    "escolalms/courses": "^0.4"
+    "escolalms/courses": "^0"
   },
   "license": "MIT",
   "authors": [
