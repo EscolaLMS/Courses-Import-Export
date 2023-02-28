@@ -235,8 +235,8 @@ class CourseImportApiTest extends TestCase
             }
         }
 
-        $this->assertCount(1, $lesson->childrenLessons);
-        $this->assertCount(1, $lesson->childrenLessons->first()->topics);
+        $this->assertCount(1, $lesson->lessons);
+        $this->assertCount(1, $lesson->lessons->first()->topics);
 
         $this->assertCount(2, $responseData->categories);
         $this->assertCount(2, $responseData->tags);

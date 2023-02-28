@@ -265,8 +265,8 @@ class ExportImportService implements ExportImportServiceContract
             }
         }
 
-        if (isset($lessonData['children_lessons']) && is_array($lessonData['children_lessons'])) {
-            foreach ($lessonData['children_lessons'] as $child) {
+        if (isset($lessonData['lessons']) && is_array($lessonData['lessons'])) {
+            foreach ($lessonData['lessons'] as $child) {
                 $child['parent_lesson_id'] = $lesson->getKey();
                 $child['course_id'] = $lesson->course_id;
                 $this->createLessonFromImport($child, $dirFullPath);
