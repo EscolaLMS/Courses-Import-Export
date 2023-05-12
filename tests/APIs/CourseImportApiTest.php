@@ -263,6 +263,33 @@ class CourseImportApiTest extends TestCase
         $response->assertStatus(400);
     }
 
+    public function testImportCourseWithRichTextTopic(): void
+    {
+        $admin = $this->makeAdmin();
+        $courseZip = new UploadedFile(realpath(
+            __DIR__ . '/../mocks/course2.zip'), 'course2.zip', null, null, true
+        );
+
+        $this->response = $this->actingAs($admin, 'api')->postJson('/api/admin/courses/zip/import', [
+            'file' => $courseZip
+        ]);
+        $this->response->assertCreated();
+
+        $data = ($this->response->json('data'));
+
+        $topicableValue = ($data['lessons'][0]['topics'][0]['topicable']['value']);
+        $filePath = "course/{$data['id']}/lesson/{$data['lessons'][0]['id']}/topic/{$data['lessons'][0]['topics'][0]['id']}/wysiwyg/";
+
+        //assert string contains other string
+        $this->assertStringContainsString($filePath . 'anglia.png', $topicableValue);
+        $this->assertStringContainsString($filePath . 'hiszpania.png', $topicableValue);
+        $this->assertStringContainsString($filePath . 'niemcy.png', $topicableValue);
+
+        Storage::assertExists($filePath . 'anglia.png');
+        Storage::assertExists($filePath . 'hiszpania.png');
+        Storage::assertExists($filePath . 'niemcy.png');
+    }
+
     public function testImportCourseWithScormScoAndH5P(): void
     {
         $admin = $this->makeAdmin();
