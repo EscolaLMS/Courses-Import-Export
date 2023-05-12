@@ -311,10 +311,8 @@ class ExportImportService implements ExportImportServiceContract
 
         $topic = $this->topicRepository->createFromRequest($request);
 
-        if (
-            $topicData['topicable_type'] === 'EscolaLms\\TopicTypes\\Models\\TopicContent\\RichText'
-            && array_key_exists('asset_folder', $topicData)
-        ) {
+        if ($topicData['topicable_type'] === 'EscolaLms\\TopicTypes\\Models\\TopicContent\\RichText'
+            && array_key_exists('asset_folder', $topicData)) {
             $this->handleRichTextTopicImport($topic, $dirFullPath, $topicData, $courseId);
         }
 
@@ -381,7 +379,14 @@ class ExportImportService implements ExportImportServiceContract
 
     private function importRichTextTopicAssets(string $filesPath, string $destinationPath, string $assetFolder): void
     {
-        $topicAssetsPath = $filesPath . DIRECTORY_SEPARATOR . 'topic' . DIRECTORY_SEPARATOR . $assetFolder . DIRECTORY_SEPARATOR;
+        $topicAssetsPath =
+            $filesPath
+            . DIRECTORY_SEPARATOR
+            . 'topic'
+            . DIRECTORY_SEPARATOR
+            . $assetFolder
+            . DIRECTORY_SEPARATOR;
+
         $files = array_diff(scandir($topicAssetsPath), array('.', '..'));
         foreach ($files as $file) {
             $fileToStore = file_get_contents($topicAssetsPath . DIRECTORY_SEPARATOR . $file);
