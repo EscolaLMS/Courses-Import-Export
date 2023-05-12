@@ -15,9 +15,11 @@ use EscolaLms\CoursesImportExport\Http\Resources\CourseExportResource;
 use EscolaLms\CoursesImportExport\Models\Course;
 use EscolaLms\CoursesImportExport\Services\Contracts\ExportImportServiceContract;
 use EscolaLms\CoursesImportExport\Strategies\Contract\TopicImportStrategy;
+use EscolaLms\CoursesImportExport\Strategies\RichTextTopicTypeStrategy;
 use EscolaLms\CoursesImportExport\Strategies\ScormScoTopicTypeStrategy;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\File as HttpFile;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
@@ -28,7 +30,6 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use ZanySoft\Zip\Zip;
 use ZipArchive;
-use Illuminate\Http\File as HttpFile;
 
 class ExportImportService implements ExportImportServiceContract
 {
@@ -46,12 +47,13 @@ class ExportImportService implements ExportImportServiceContract
     ];
 
     public function __construct(
-        CourseRepositoryContract $courseRepository,
-        LessonRepositoryContract $lessonRepository,
-        TopicRepositoryContract $topicRepository,
+        CourseRepositoryContract        $courseRepository,
+        LessonRepositoryContract        $lessonRepository,
+        TopicRepositoryContract         $topicRepository,
         TopicResourceRepositoryContract $topicResourceRepository,
-        CategoriesRepositoryContract $categoriesRepository
-    ) {
+        CategoriesRepositoryContract    $categoriesRepository
+    )
+    {
         $this->courseRepository = $courseRepository;
         $this->lessonRepository = $lessonRepository;
         $this->topicRepository = $topicRepository;
@@ -98,7 +100,7 @@ class ExportImportService implements ExportImportServiceContract
 
     private function createZipFromFolder($dirName, bool $withUrl = true): string
     {
-        $filename = uniqid(rand(), true).'.zip';
+        $filename = uniqid(rand(), true) . '.zip';
         $zip = new ZipArchive();
 
         if (!Storage::disk('local')->exists($dirName)) {
@@ -116,7 +118,7 @@ class ExportImportService implements ExportImportServiceContract
             $content = Storage::get($file);
             $dir = str_replace($dirName . '/content', '', $file);
 
-            if (! $zip->addFromString($dir, $content)) {
+            if (!$zip->addFromString($dir, $content)) {
                 throw new \Exception("File [`{$file}`] could not be added to the zip file: " . $zip->getStatusString());
             }
         }
@@ -130,12 +132,12 @@ class ExportImportService implements ExportImportServiceContract
 
     private function getExportUrl(string $dirName, string $fileName): string
     {
-        return Storage::disk('local')->url($dirName. DIRECTORY_SEPARATOR . $fileName);
+        return Storage::disk('local')->url($dirName . DIRECTORY_SEPARATOR . $fileName);
     }
 
     private function getExportDir(string $dirName, string $fileName): string
     {
-        return Storage::disk('local')->path($dirName. DIRECTORY_SEPARATOR . $fileName);
+        return Storage::disk('local')->path($dirName . DIRECTORY_SEPARATOR . $fileName);
     }
 
     public function export($courseId, bool $withUrl = true): string
@@ -261,7 +263,7 @@ class ExportImportService implements ExportImportServiceContract
         if (isset($lessonData['topics']) && is_array($lessonData['topics'])) {
             foreach ($lessonData['topics'] as $topic) {
                 $topic['lesson_id'] = $lesson->getKey();
-                $this->createTopicFromImport(array_filter($topic), $dirFullPath);
+                $this->createTopicFromImport(array_filter($topic), $dirFullPath, $lessonData['course_id']);
             }
         }
 
@@ -276,7 +278,7 @@ class ExportImportService implements ExportImportServiceContract
         return $lesson;
     }
 
-    private function createTopicFromImport(array $topicData, string $dirFullPath): ?Model
+    private function createTopicFromImport(array $topicData, string $dirFullPath, int $courseId): ?Model
     {
         if (!isset($topicData['topicable_type'])) {
             return null;
@@ -308,6 +310,13 @@ class ExportImportService implements ExportImportServiceContract
         }
 
         $topic = $this->topicRepository->createFromRequest($request);
+
+        if (
+            $topicData['topicable_type'] === 'EscolaLms\\TopicTypes\\Models\\TopicContent\\RichText'
+            && array_key_exists('asset_folder', $topicData)
+        ) {
+            $this->handleRichTextTopicImport($topic, $dirFullPath, $topicData, $courseId);
+        }
 
         if (isset($topicData['resources']) && is_array($topicData['resources'])) {
             $this->createTopicResources($topicData['resources'], $topic, $dirFullPath);
@@ -360,5 +369,44 @@ class ExportImportService implements ExportImportServiceContract
     {
         $strategy = 'EscolaLms\\CoursesImportExport\\Strategies\\' . substr(strrchr($topicType, "\\"), 1) . 'TopicTypeStrategy';
         return new $strategy();
+    }
+
+    private function handleRichTextTopicImport(Topic $topic, string $zipFilesPath, array $data, $courseId): void
+    {
+        $destinationPath = $this->getTopicAssetsDestinationPath($topic, $courseId, $data['lesson_id']);
+
+        $this->updateRichTextTopicableValue($topic, $destinationPath);
+        $this->importRichTextTopicAssets($zipFilesPath, $destinationPath, $data['asset_folder']);
+    }
+
+    private function importRichTextTopicAssets(string $filesPath, string $destinationPath, string $assetFolder): void
+    {
+        $topicAssetsPath = $filesPath . DIRECTORY_SEPARATOR . 'topic' . DIRECTORY_SEPARATOR . $assetFolder . DIRECTORY_SEPARATOR;
+        $files = array_diff(scandir($topicAssetsPath), array('.', '..'));
+        foreach ($files as $file) {
+            $fileToStore = file_get_contents($topicAssetsPath . DIRECTORY_SEPARATOR . $file);
+            Storage::disk('local')->put($destinationPath . basename($file), $fileToStore);
+        }
+    }
+
+    private function updateRichTextTopicableValue(Topic $topic, $path): void
+    {
+
+        $topicable = $topic->topicable;
+
+        $topicable->value = preg_replace_callback(
+            '/\!\[\]\((course\/.*?\.\w+)\)/',
+            function ($matches) use ($path) {
+                return '![](' . url('api/images/img') . '?path=' . $path . basename($matches[1]) . '&w=1000)';
+            },
+            $topicable->value
+        );
+
+        $topicable->save();
+    }
+
+    private function getTopicAssetsDestinationPath(Topic $topic, int $courseId, int $lessonId): string
+    {
+        return "course/$courseId/lesson/$lessonId/topic/{$topic->getKey()}/wysiwyg/";
     }
 }
