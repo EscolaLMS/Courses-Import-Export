@@ -315,11 +315,9 @@ class ExportImportService implements ExportImportServiceContract
             && array_key_exists('asset_folder', $topicData)) {
             $this->handleRichTextTopicImport($topic, $dirFullPath, $topicData, $courseId);
         }
-
         if (isset($topicData['resources']) && is_array($topicData['resources'])) {
             $this->createTopicResources($topicData['resources'], $topic, $dirFullPath);
         }
-
         return $topic;
     }
 
@@ -387,10 +385,14 @@ class ExportImportService implements ExportImportServiceContract
             . $assetFolder
             . DIRECTORY_SEPARATOR;
 
+        if (!is_dir($topicAssetsPath)) {
+            return;
+        }
+
         $files = array_diff(scandir($topicAssetsPath), array('.', '..'));
         foreach ($files as $file) {
             $fileToStore = file_get_contents($topicAssetsPath . DIRECTORY_SEPARATOR . $file);
-            Storage::disk('local')->put($destinationPath . basename($file), $fileToStore);
+            Storage::put($destinationPath . basename($file), $fileToStore);
         }
     }
 
