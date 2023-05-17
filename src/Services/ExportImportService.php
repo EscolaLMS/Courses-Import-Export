@@ -371,7 +371,7 @@ class ExportImportService implements ExportImportServiceContract
 
     private function handleRichTextTopicImport(Topic $topic, string $zipFilesPath, array $data, $courseId): void
     {
-        $destinationPath = $this->getTopicAssetsDestinationPath($topic, $courseId, $data['lesson_id']);
+        $destinationPath = $this->getTopicAssetsDestinationPath($topic, $courseId);
 
         $this->updateRichTextTopicableValue($topic, $destinationPath);
         $this->importRichTextTopicAssets($zipFilesPath, $destinationPath, $data['asset_folder']);
@@ -396,9 +396,8 @@ class ExportImportService implements ExportImportServiceContract
 
     private function updateRichTextTopicableValue(Topic $topic, $path): void
     {
-
         $topicable = $topic->topicable;
-
+        //api images
         $topicable->value = preg_replace_callback(
             '/\!\[\]\((course\/.*?\.\w+)\)/',
             function ($matches) use ($path) {
@@ -406,12 +405,19 @@ class ExportImportService implements ExportImportServiceContract
             },
             $topicable->value
         );
-
+        //other assets
+        $topicable->value = preg_replace_callback(
+            '/!\[(course.*?)\]\(\1\)/',
+            function ($matches) use ($path) {
+                return '![' . url('storage/' . $path) . '/' . basename($matches[1]) . '](' . url('storage/' . $path ) . '/' . basename($matches[1]) . ')';
+            },
+            $topicable->value
+        );
         $topicable->save();
     }
 
-    private function getTopicAssetsDestinationPath(Topic $topic, int $courseId, int $lessonId): string
+    private function getTopicAssetsDestinationPath(Topic $topic, int $courseId): string
     {
-        return "course/$courseId/lesson/$lessonId/topic/{$topic->getKey()}/wysiwyg/";
+        return "course/$courseId/topic/{$topic->getKey()}/";
     }
 }
