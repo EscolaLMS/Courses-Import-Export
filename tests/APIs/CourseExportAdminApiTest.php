@@ -154,6 +154,8 @@ class CourseExportAdminApiTest extends TestCase
             "/api/admin/courses/{$courseImportExport->getKey()}/export/"
         );
 
-        $this->assertTrue(!empty(Storage::files("exports/courses/{$courseImportExport->getKey()}")));
+        $filename = basename($this->response->getData()->data);
+        $filepath = sprintf('exports/courses/%d/%s', $courseImportExport->getKey(), $filename);
+        Storage::assertExists($filepath);
     }
 }
