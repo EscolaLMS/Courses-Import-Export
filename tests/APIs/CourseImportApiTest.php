@@ -191,7 +191,6 @@ class CourseImportApiTest extends TestCase
         ]);
 
         $response->assertForbidden();
-
         $zipFile = [
             'file' => new UploadedFile(Storage::path($this->dirPath . 'course-import.zip'),
                 'course-import.zip', null, null, true)
@@ -278,16 +277,18 @@ class CourseImportApiTest extends TestCase
         $data = ($this->response->json('data'));
 
         $topicableValue = ($data['lessons'][0]['topics'][0]['topicable']['value']);
-        $filePath = "course/{$data['id']}/lesson/{$data['lessons'][0]['id']}/topic/{$data['lessons'][0]['topics'][0]['id']}/wysiwyg/";
+        $filePath = "course/{$data['id']}/topic/{$data['lessons'][0]['topics'][0]['id']}/";
 
         //assert string contains other string
         $this->assertStringContainsString($filePath . 'anglia.png', $topicableValue);
         $this->assertStringContainsString($filePath . 'hiszpania.png', $topicableValue);
         $this->assertStringContainsString($filePath . 'niemcy.png', $topicableValue);
+        $this->assertStringContainsString($filePath . 'sample.pdf', $topicableValue);
 
         Storage::assertExists($filePath . 'anglia.png');
         Storage::assertExists($filePath . 'hiszpania.png');
         Storage::assertExists($filePath . 'niemcy.png');
+        Storage::assertExists($filePath . 'sample.pdf');
     }
 
     public function testImportCourseWithScormScoAndH5P(): void
