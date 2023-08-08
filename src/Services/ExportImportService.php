@@ -391,7 +391,12 @@ class ExportImportService implements ExportImportServiceContract
 
         $files = array_diff(scandir($topicAssetsPath), array('.', '..'));
         foreach ($files as $file) {
-            $fileToStore = file_get_contents($topicAssetsPath . DIRECTORY_SEPARATOR . $file);
+            $fileFullPath = $topicAssetsPath . DIRECTORY_SEPARATOR . $file;
+            if (!is_file($fileFullPath)) {
+                continue;
+            }
+
+            $fileToStore = file_get_contents($fileFullPath);
             Storage::put($destinationPath . basename($file), $fileToStore);
         }
     }
