@@ -39,7 +39,7 @@ class CourseCloneJobTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        Event::fake();
+        Event::fake([CloneCourseStartedEvent::class, CloneCourseFinishedEvent::class, CloneCourseFailedEvent::class]);
     }
 
     public function testCloneCourseJobFailed(): void
