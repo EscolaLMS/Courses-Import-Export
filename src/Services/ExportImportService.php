@@ -28,7 +28,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
-use ZanySoft\Zip\Zip;
+use ZanySoft\Zip\Facades\Zip;
 use ZipArchive;
 
 class ExportImportService implements ExportImportServiceContract
