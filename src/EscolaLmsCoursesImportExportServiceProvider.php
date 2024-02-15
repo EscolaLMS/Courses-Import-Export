@@ -7,6 +7,7 @@ use EscolaLms\CoursesImportExport\Services\Contracts\CloneCourseServiceContract;
 use EscolaLms\CoursesImportExport\Services\Contracts\ExportImportServiceContract;
 use EscolaLms\CoursesImportExport\Services\ExportImportService;
 use Illuminate\Support\ServiceProvider;
+use ZanySoft\Zip\ZipServiceProvider;
 
 class EscolaLmsCoursesImportExportServiceProvider extends ServiceProvider
 {
@@ -24,5 +25,6 @@ class EscolaLmsCoursesImportExportServiceProvider extends ServiceProvider
     public function register()
     {
         $this->app->register(AuthServiceProvider::class);
+        $this->app->register(ZipServiceProvider::class);
     }
 }

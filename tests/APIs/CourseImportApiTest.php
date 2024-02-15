@@ -23,7 +23,7 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-use ZanySoft\Zip\Zip;
+use ZanySoft\Zip\Facades\Zip;
 
 class CourseImportApiTest extends TestCase
 {
