@@ -92,6 +92,7 @@ class CourseCloneJobTest extends TestCase
         $this->assertEquals($course->lessons()->count(), $cloned->lessons()->count());
         $this->assertEquals(6, $course->lessons()->with('topics')->get()->map(fn($elem) => $elem->topics)->flatten()->count());
         $this->assertEquals(6, $cloned->lessons()->with('topics')->get()->map(fn($elem) => $elem->topics)->flatten()->count());
+        $this->assertEquals($course->authors()->pluck('author_id')->toArray(), $cloned->authors()->pluck('author_id')->toArray());
 
         Event::assertDispatched(CloneCourseStartedEvent::class, fn($elem) => $elem->getCourse()->getKey() === $course->getKey());
         Event::assertDispatched(CloneCourseFinishedEvent::class, fn($elem) => $elem->getCourse()->getKey() === $cloned->getKey());

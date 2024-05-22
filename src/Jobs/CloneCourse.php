@@ -46,7 +46,9 @@ class CloneCourse implements ShouldQueue
             $fileDir = $exportImportService->export($this->course->getKey(), false);
             $file = $this->createFileToExport($fileDir);
 
+            /** @var Course $course */
             $course = $exportImportService->import($file);
+            $course->authors()->sync($this->course->authors()->pluck('author_id'));
 
             CloneCourseFinishedEvent::dispatch($this->user, $course);
             Log::info('Course cloning finished');
