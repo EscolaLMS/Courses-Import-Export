@@ -13,7 +13,7 @@
     "orchestra/testbench": ">=7.0",
     "escolalms/auth": "^0",
     "escolalms/settings": "^0",
-    "escolalms/headless-h5p": "^0",
+    "escolalms/headless-h5p": "^0.4",
     "escolalms/topic-types": "^0",
     "escolalms/courses": "^0.4"
   },
