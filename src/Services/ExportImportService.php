@@ -229,6 +229,7 @@ class ExportImportService implements ExportImportServiceContract
         }
 
         $courseValidator = Validator::make($courseData, Course::rules());
+        /** @var Course $course */
         $course = $this->courseRepository->create($courseValidator->validate());
 
         // create categories
@@ -258,6 +259,7 @@ class ExportImportService implements ExportImportServiceContract
     private function createLessonFromImport(array $lessonData, string $dirFullPath): Model
     {
         $lessonValidator = Validator::make($lessonData, Lesson::$rules);
+        /** @var Lesson $lesson */
         $lesson = $this->lessonRepository->create($lessonValidator->validate());
 
         if (isset($lessonData['topics']) && is_array($lessonData['topics'])) {

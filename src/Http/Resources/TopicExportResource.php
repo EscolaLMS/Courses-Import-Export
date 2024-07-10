@@ -16,27 +16,27 @@ class TopicExportResource extends JsonResource
      */
     public function toArray($request)
     {
-        $topicable = $this->topicable;
+        $topicable = $this->resource->topicable;
 
-        if (Topic::getResourceClass($this->topicable_type, 'export')) {
-            $resourceClass = Topic::getResourceClass($this->topicable_type, 'export');
-            $resource = new $resourceClass($this->topicable);
+        if (Topic::getResourceClass($this->resource->topicable_type, 'export')) {
+            $resourceClass = Topic::getResourceClass($this->resource->topicable_type, 'export');
+            $resource = new $resourceClass($this->resource->topicable);
             $topicable = $resource->toArray($request);
         }
 
         return [
-            'title' => $this->title,
-            'active' => $this->active,
-            'preview' => $this->preview,
-            'topicable_type' => $this->topicable_type,
+            'title' => $this->resource->title,
+            'active' => $this->resource->active,
+            'preview' => $this->resource->preview,
+            'topicable_type' => $this->resource->topicable_type,
             'topicable' => $topicable,
-            'summary' => $this->summary,
-            'introduction' => $this->introduction,
-            'description' => $this->description,
-            'resources' => TopicExportResourceResource::collection($this->resources),
-            'order' => $this->order,
+            'summary' => $this->resource->summary,
+            'introduction' => $this->resource->introduction,
+            'description' => $this->resource->description,
+            'resources' => TopicExportResourceResource::collection($this->resource->resources),
+            'order' => $this->resource->order,
             'json' => null,
-            'can_skip' => $this->can_skip,
+            'can_skip' => $this->resource->can_skip,
         ];
     }
 }

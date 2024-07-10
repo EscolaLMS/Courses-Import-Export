@@ -17,7 +17,7 @@ class CourseScormScoExportResource extends JsonResource
      */
     public function toArray($request): array
     {
-        $scormSco = $this->scormSco;
+        $scormSco = $this->resource->scormSco;
         return [
             'id' => $scormSco->getKey(),
             'uuid' => $scormSco ? $scormSco->uuid : null,

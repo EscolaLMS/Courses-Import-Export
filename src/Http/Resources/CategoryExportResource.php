@@ -17,12 +17,12 @@ class CategoryExportResource extends JsonResource
     public function toArray($request): array
     {
         return [
-            'name' => $this->name,
-            'slug' => $this->slug,
-            'is_active' => $this->is_active,
-            'parent' => $this->parent_id ? CategoryExportResource::make($this->parent) : null,
-            'icon' => $this->icon,
-            'icon_class' => $this->icon_class,
+            'name' => $this->resource->name,
+            'slug' => $this->resource->slug,
+            'is_active' => $this->resource->is_active,
+            'parent' => $this->resource->parent_id ? CategoryExportResource::make($this->resource->parent) : null,
+            'icon' => $this->resource->icon,
+            'icon_class' => $this->resource->icon_class,
         ];
     }
 }
