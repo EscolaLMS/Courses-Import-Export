@@ -25,12 +25,12 @@ class LessonExportResource extends JsonResource
         $lesson = $this->getResource();
 
         return [
-            'title' => $this->title,
-            'summary' => $this->summary,
-            'duration' => $this->duration,
-            'active' => $this->active,
+            'title' => $lesson->title,
+            'summary' => $lesson->summary,
+            'duration' => $lesson->duration,
+            'active' => $lesson->active,
             'topics' => TopicExportResource::collection($lesson->topics->sortBy('order')),
-            'order' => $this->order,
+            'order' => $lesson->order,
             'lessons' => LessonExportResource::collection($lesson->lessons),
         ];
     }

@@ -36,6 +36,7 @@ class Course extends BaseCourse
             return [];
         }
 
+        // @phpstan-ignore-next-line
         $scorm = $this->scormSco->scorm;
         $destination = sprintf('course/%d/%s', $this->id, basename(CoursesImportExportEnum::SCORM_FILE));
 

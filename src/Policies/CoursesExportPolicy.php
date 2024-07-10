@@ -12,9 +12,6 @@ class CoursesExportPolicy
 {
     use HandlesAuthorization;
 
-    /**
-     * @return bool
-     */
     public function export(User $user, Course $course)
     {
         if ($user->hasRole('admin')) {
