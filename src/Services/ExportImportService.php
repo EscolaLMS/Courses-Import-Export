@@ -405,9 +405,9 @@ class ExportImportService implements ExportImportServiceContract
 
     private function updateRichTextTopicableValue(Topic $topic, $path): void
     {
-        // @phpstan-ignore-next-line
         $topicable = $topic->topicable;
         //api images
+        // @phpstan-ignore-next-line
         $topicable->value = preg_replace_callback(
             '/\!\[\]\((course\/.*?\.\w+)\)/',
             function ($matches) use ($path) {
