@@ -95,6 +95,7 @@
                     "Admin Courses"
                 ],
                 "description": "Course cloning",
+                "operationId": "69e06240c85e916e8c500d303b5738cb",
                 "parameters": [
                     {
                         "name": "id",
@@ -126,5 +127,11 @@
                 ]
             }
         }
-    }
+    },
+    "tags": [
+        {
+            "name": "Admin Courses",
+            "description": "Admin Courses"
+        }
+    ]
 }
