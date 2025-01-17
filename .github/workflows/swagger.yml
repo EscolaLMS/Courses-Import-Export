@@ -1,5 +1,10 @@
 name: Generate Swagger Documentation
 
+#on:
+#  push:
+#    branches:
+#      - main
+
 on: [pull_request]
 
 jobs:
@@ -28,7 +33,6 @@ jobs:
         run: cp -r env/codecov/. .
 
       - name: add Swagger main annotaion
-
         run: php -r "file_put_contents('src/Http/Controllers/CourseExportImportAPIController.php', str_replace('SWAGGER_VERSION', '@OA\Info(title=\"EscolaLMS\", version=\"0.0.1\")', file_get_contents('src/Http/Controllers/CourseExportImportAPIController.php')));"
 
       - name: Update composer
@@ -39,8 +43,6 @@ jobs:
 
       - name: Discover packages
         run: vendor/bin/testbench package:discover --ansi
-
-      - name: Generate YAML openapi
 
       - name: Generate Swagger UI
         uses: Legion2/swagger-ui-action@v1
