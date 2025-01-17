@@ -97,6 +97,7 @@ class Course extends BaseCourse
             foreach ($lesson->topics as $topic) {
                 $topicable = $topic->topicable;
                 if (isset($topicable)) {
+                    // @phpstan-ignore-next-line
                     foreach ($topic->topicable->fixAssetPaths() as $fix) {
                         $results = $results + $fix;
                     }

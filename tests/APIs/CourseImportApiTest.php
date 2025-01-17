@@ -269,12 +269,20 @@ class CourseImportApiTest extends TestCase
             __DIR__ . '/../mocks/course2.zip'), 'course2.zip', null, null, true
         );
 
-        $this->response = $this->actingAs($admin, 'api')->postJson('/api/admin/courses/zip/import', [
-            'file' => $courseZip
-        ]);
-        $this->response->assertCreated();
+        $response = $this
+            ->actingAs($admin, 'api')
+            ->postJson('/api/admin/courses/zip/import', [
+                'file' => $courseZip,
+            ])
+            ->assertCreated();
 
-        $data = ($this->response->json('data'));
+        $courseId = $response->json('data.id');
+
+        $data = $this
+            ->actingAs($admin, 'api')
+            ->getJson("/api/admin/courses/$courseId/program")
+            ->assertOk()
+            ->json('data');
 
         $topicableValue = ($data['lessons'][0]['topics'][0]['topicable']['value']);
         $filePath = "course/{$data['id']}/topic/{$data['lessons'][0]['topics'][0]['id']}/";
@@ -299,14 +307,25 @@ class CourseImportApiTest extends TestCase
             __DIR__ . '/../mocks/course.zip'), 'course.zip', null, null, true
         );
 
-        $response = $this->actingAs($admin, 'api')->postJson('/api/admin/courses/zip/import', [
-            'file' => $courseZip
-        ])->assertCreated();
+        $response = $this
+            ->actingAs($admin, 'api')
+            ->postJson('/api/admin/courses/zip/import', [
+                'file' => $courseZip,
+            ])
+            ->assertCreated();
+
+        $courseId = $response->json('data.id');
+
+        $response = $this
+            ->actingAs($admin, 'api')
+            ->getJson("/api/admin/courses/$courseId/program")
+            ->assertOk();
 
         $data = $response->getData()->data;
 
         $lesson = $data->lessons[0];
         $topic = $lesson->topics[0];
+
         $topicableSco = current(array_filter($lesson->topics, fn($item) => $item->topicable_type === 'EscolaLms\TopicTypes\Models\TopicContent\ScormSco'));
         $topicableH5P = current(array_filter($lesson->topics, fn($item) => $item->topicable_type === 'EscolaLms\TopicTypes\Models\TopicContent\H5P'));
 

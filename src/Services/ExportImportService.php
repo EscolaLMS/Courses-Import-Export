@@ -407,11 +407,13 @@ class ExportImportService implements ExportImportServiceContract
     {
         $topicable = $topic->topicable;
         //api images
+        // @phpstan-ignore-next-line
         $topicable->value = preg_replace_callback(
             '/\!\[\]\((course\/.*?\.\w+)\)/',
             function ($matches) use ($path) {
                 return '![](' . url('api/images/img') . '?path=' . $path . basename($matches[1]) . '&w=1000)';
             },
+            // @phpstan-ignore-next-line
             $topicable->value
         );
         //other assets
