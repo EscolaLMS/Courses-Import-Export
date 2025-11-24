@@ -127,6 +127,18 @@ class ExportImportService implements ExportImportServiceContract
 
         Storage::deleteDirectory($dirName . '/content');
 
+        if (Storage::getDefaultDriver() === 's3') {
+            $s3Path = $dirName . '/' . $filename;
+            $fileStream = fopen($zipFile, 'r+');
+            Storage::put($s3Path, $fileStream);
+
+            if (is_resource($fileStream)) {
+                fclose($fileStream);
+            }
+
+            return $withUrl ? Storage::url($s3Path) : $s3Path;
+        }
+
         return $withUrl ? $this->getExportUrl($dirName, $filename) : $this->getExportDir($dirName, $filename);
     }
 
@@ -166,7 +178,9 @@ class ExportImportService implements ExportImportServiceContract
             Log::error($message);
             throw new Exception($message);
         } finally {
-            Storage::deleteDirectory($dirPath);
+            if (Storage::disk('local')->exists($dirPath)) {
+                Storage::disk('local')->deleteDirectory($dirPath);
+            }
         }
 
         return $course->load('categories', 'tags', 'lessons', 'lessons.topics', 'lessons.topics.topicable');
@@ -179,7 +193,9 @@ class ExportImportService implements ExportImportServiceContract
         }
 
         $dirFullPath = Storage::disk('local')->path($dirPath);
-        Zip::open($zipFile)->extract($dirFullPath);
+        $zip = Zip::open($zipFile);
+        $zip->extract($dirFullPath);
+        $zip->close();
 
         return $dirFullPath;
     }
